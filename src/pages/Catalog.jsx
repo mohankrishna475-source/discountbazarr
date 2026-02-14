@@ -41,7 +41,11 @@ export default function Catalog() {
   }, [activeCategory]);
 
   return (
-    <div className="catalog-container">
+    <div
+  className="catalog-container"
+  style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}
+>
+
       {/* 🔹 HERO */}
       <div className="hero">
         <div className="logo">DB</div>
