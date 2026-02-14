@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 import "../styles/catalog.css";
@@ -8,14 +9,14 @@ export default function Catalog() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
 
-  // 🔹 LOAD SUBCATEGORIES (ORDER BY PRIORITY)
+  // 🔹 LOAD SUBCATEGORIES
   useEffect(() => {
     const loadCategories = async () => {
       const { data } = await supabase
         .from("subcategories")
         .select("*")
         .eq("is_active", true)
-        .order("priority", { ascending: true });
+        .order("display_order", { ascending: true });
 
       setCategories(data || []);
     };
@@ -23,13 +24,13 @@ export default function Catalog() {
     loadCategories();
   }, []);
 
-  // 🔹 LOAD PRODUCTS BASED ON CATEGORY
+  // 🔹 LOAD PRODUCTS FROM catalog_items
   useEffect(() => {
     if (!activeCategory) return;
 
     const loadProducts = async () => {
       const { data } = await supabase
-        .from("products")
+        .from("catalog_items")
         .select("*")
         .eq("subcategory_slug", activeCategory);
 
@@ -41,20 +42,19 @@ export default function Catalog() {
 
   return (
     <div className="catalog-container">
-
-      {/* 🔵 HERO HEADER */}
+      {/* 🔹 HERO */}
       <div className="hero">
         <div className="logo">DB</div>
         <div className="official">OFFICIAL</div>
         <div className="insta">@discount_bazarr</div>
 
         <h1>DISCOUNT BAZARR</h1>
-        <p>🤝 Come with Trust</p>
+        <p>🧡 Come with Trust</p>
         <p>🛡️ Buy with Confidence</p>
         <p>😊 Move with Happiness</p>
       </div>
 
-      {/* 🔵 TABS */}
+      {/* 🔹 TABS */}
       <div className="fancy-tabs">
         <button
           className={tab === "deals" ? "active" : ""}
@@ -84,7 +84,7 @@ export default function Catalog() {
         </button>
       </div>
 
-      {/* 🔵 SUBCATEGORIES GRID */}
+      {/* 🔹 SUBCATEGORIES GRID */}
       {tab === "deals" && !activeCategory && (
         <div className="category-grid">
           {categories.map((cat) => (
@@ -99,32 +99,28 @@ export default function Catalog() {
         </div>
       )}
 
-      {/* 🔵 PRODUCTS GRID */}
+      {/* 🔹 PRODUCTS GRID */}
       {activeCategory && (
         <div className="product-grid">
           {products.map((p) => (
             <div key={p.id} className="product-card">
-
-              <img src={p.image_url} alt={p.title} />
+              <img
+                src={p.image_url || "/no-image.png"}
+                alt={p.title}
+              />
 
               <h3>{p.title}</h3>
 
-              {/* PRICE SECTION */}
               <div className="price-box">
                 <span className="mrp">₹{p.mrp}</span>
-                <span className="online">₹{p.online_price}</span>
+                <span className="online">₹{p.fsp}</span>
                 <span className="dbprice">₹{p.db_price}</span>
               </div>
 
-              {/* DISCOUNT */}
               <div className="discount">
-                {Math.round(
-                  ((p.mrp - p.db_price) / p.mrp) * 100
-                )}
-                % OFF
+                {p.fsp_percent}% OFF
               </div>
 
-              {/* WHATSAPP BUTTON */}
               <button
                 className="whatsapp-btn"
                 onClick={() =>
