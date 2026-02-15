@@ -8,6 +8,19 @@ export default function Catalog() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
 
+  // 🔹 CATEGORY ICON MAP
+  const categoryIcons = {
+    "Kitchen Appliances": "🍳",
+    "Premium Footwear": "👟",
+    "Household": "🏠",
+    "Fashion Wear": "👗",
+    "Small Appliances": "🔌",
+    "Luggage & Bags": "🧳",
+    "Home Tools": "🛠",
+    "Sports & Fitness": "🏋️",
+    "Stationary Items": "📚",
+  };
+
   // 🔹 LOAD SUBCATEGORIES
   useEffect(() => {
     const loadCategories = async () => {
@@ -41,24 +54,44 @@ export default function Catalog() {
 
   return (
     <div className="page-layout">
+
       {/* 🔹 LEFT SIDEBAR */}
       <div className="sidebar">
-        <div className="logo">DB</div>
-        <div className="official">OFFICIAL</div>
+        <img
+          src="/logo.png"
+          alt="Discount Bazarr"
+          className="sidebar-logo"
+        />
+        <div className="official">DB OFFICIAL</div>
         <div className="insta">@discount_bazarr</div>
       </div>
 
-      {/* 🔹 MAIN CONTENT CENTER */}
+      {/* 🔹 MAIN CONTENT */}
       <div className="catalog-container">
-        {/* HERO */}
+
+        {/* 🔹 HERO */}
         <div className="hero">
-          <h1>Discount Bazarr</h1>
-          <p>🤝 Come with Trust</p>
-          <p>🛡 Buy with Confidence</p>
-          <p>😊 Move with Happiness</p>
+          <h1 className="brand-title">Discount Bazarr</h1>
+
+          <div className="tagline">
+            <div className="tag-item">
+              <span className="tag-icon">🤝</span>
+              Come with Trust
+            </div>
+
+            <div className="tag-item">
+              <span className="tag-icon">🛡</span>
+              Buy with Confidence
+            </div>
+
+            <div className="tag-item">
+              <span className="tag-icon">😊</span>
+              Move with Happiness
+            </div>
+          </div>
         </div>
 
-        {/* TABS */}
+        {/* 🔹 TABS */}
         <div className="fancy-tabs">
           <button
             className={tab === "deals" ? "active" : ""}
@@ -88,7 +121,7 @@ export default function Catalog() {
           </button>
         </div>
 
-        {/* SUBCATEGORIES */}
+        {/* 🔹 SUBCATEGORIES */}
         {tab === "deals" && !activeCategory && (
           <div className="category-grid">
             {categories.map((cat) => (
@@ -97,6 +130,9 @@ export default function Catalog() {
                 className="category-card"
                 onClick={() => setActiveCategory(cat.slug)}
               >
+                <div className="cat-icon">
+                  {categoryIcons[cat.name] || "🛒"}
+                </div>
                 <div className="category-name">{cat.name}</div>
                 <div className="stock">Stock Loaded</div>
               </div>
@@ -104,57 +140,63 @@ export default function Catalog() {
           </div>
         )}
 
-        {/* PRODUCTS GRID */}
+        {/* 🔹 PRODUCTS GRID */}
         {activeCategory && (
           <div className="product-grid">
             {products.map((p) => (
               <div key={p.id} className="product-card">
-                <img src={p.image_url || "/no-image.png"} alt={p.title} />
 
-<h3 className="title">{p.title}</h3>
+                <img
+                  src={p.image_url || "/no-image.png"}
+                  alt={p.title}
+                />
 
-<div className="price-box">
+                <h3 className="title">{p.title}</h3>
 
-  {/* MRP */}
-  {p.mrp && (
-    <div className="mrp" style={{ textDecoration: "line-through", color: "#888" }}>
-      ₹{p.mrp}
-    </div>
-  )}
+                <div className="price-box">
 
-  {/* Online price */}
-  {p.online_price && (
-    <div className="online" style={{ color: "#555" }}>
-      Online ₹{p.online_price}
-    </div>
-  )}
+                  {/* MRP */}
+                  {p.mrp && (
+                    <div className="mrp">₹{p.mrp}</div>
+                  )}
 
-  {/* DB PRICE BADGE */}
-  <div className="db-badge">
-    <div className="db-label">DB PRICE</div>
-    <div className="db-value">₹{p.db_price}</div>
-  </div>
+                  {/* ONLINE PRICE */}
+                  {p.online_price && (
+                    <div className="online">
+                      Online ₹{p.online_price}
+                    </div>
+                  )}
 
-</div>
+                  {/* 🔹 DB PRICE BADGE */}
+                  <div className="db-badge">
+                    <div className="db-label">DB PRICE</div>
+                    <div className="db-value">₹{p.db_price}</div>
+                  </div>
+                </div>
 
-{/* Discount % based on ONLINE → DB */}
-{p.online_price && p.db_price && (
-  <div className="discount" style={{ color: "red", fontWeight: "bold" }}>
-    {Math.round(((p.online_price - p.db_price) / p.online_price) * 100)}% OFF
-  </div>
-)}
+                {/* 🔹 DISCOUNT % (ONLINE → DB) */}
+                {p.online_price && p.db_price && (
+                  <div className="discount">
+                    {Math.round(
+                      ((p.online_price - p.db_price) /
+                        p.online_price) *
+                        100
+                    )}
+                    % OFF
+                  </div>
+                )}
 
-<button
-  className="whatsapp-btn"
-  onClick={() =>
-    window.open(
-      `https://wa.me/918328364086?text=I want ${p.title}`,
-      "_blank"
-    )
-  }
->
-  Order on WhatsApp
-</button>
+                <button
+                  className="whatsapp-btn"
+                  onClick={() =>
+                    window.open(
+                      `https://wa.me/918238364086?text=I want ${p.title}`,
+                      "_blank"
+                    )
+                  }
+                >
+                  Order on WhatsApp
+                </button>
               </div>
             ))}
           </div>
