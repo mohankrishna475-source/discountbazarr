@@ -111,27 +111,49 @@ export default function Catalog() {
               <div key={p.id} className="product-card">
                 <img src={p.image_url || "/no-image.png"} alt={p.title} />
 
-                <h3 className="title">{p.title}</h3>
+<h3 className="title">{p.title}</h3>
 
-                <div className="price-box">
-                  <span className="mrp">₹{p.mrp}</span>
-                  <span className="online">₹{p.fsp}</span>
-                  <span className="dbprice">₹{p.db_price}</span>
-                </div>
+<div className="price-box">
 
-                <div className="discount">{p.fsp_percent}% OFF</div>
+  {/* MRP - strike through */}
+  {p.mrp && (
+    <span className="mrp" style={{ textDecoration: "line-through", color: "#888", marginRight: "8px" }}>
+      ₹{p.mrp}
+    </span>
+  )}
 
-                <button
-                  className="whatsapp-btn"
-                  onClick={() =>
-                    window.open(
-                      `https://wa.me/918328364086?text=I want ${p.title}`,
-                      "_blank"
-                    )
-                  }
-                >
-                  Order on WhatsApp
-                </button>
+  {/* Online price - normal */}
+  {p.online_price && (
+    <span className="online" style={{ color: "#555", marginRight: "8px" }}>
+      ₹{p.online_price}
+    </span>
+  )}
+
+  {/* DB Price - highlight */}
+  <span className="dbprice" style={{ fontWeight: "bold", color: "green", fontSize: "18px" }}>
+    ₹{p.db_price}
+  </span>
+
+</div>
+
+{/* Discount % based on ONLINE → DB */}
+{p.online_price && p.db_price && (
+  <div className="discount" style={{ color: "red", fontWeight: "bold" }}>
+    {Math.round(((p.online_price - p.db_price) / p.online_price) * 100)}% OFF
+  </div>
+)}
+
+<button
+  className="whatsapp-btn"
+  onClick={() =>
+    window.open(
+      `https://wa.me/918328364086?text=I want ${p.title}`,
+      "_blank"
+    )
+  }
+>
+  Order on WhatsApp
+</button>
               </div>
             ))}
           </div>
