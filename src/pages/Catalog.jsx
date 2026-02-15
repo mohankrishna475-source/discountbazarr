@@ -115,24 +115,25 @@ export default function Catalog() {
 
 <div className="price-box">
 
-  {/* MRP - strike through */}
+  {/* MRP */}
   {p.mrp && (
-    <span className="mrp" style={{ textDecoration: "line-through", color: "#888", marginRight: "8px" }}>
+    <div className="mrp" style={{ textDecoration: "line-through", color: "#888" }}>
       ₹{p.mrp}
-    </span>
+    </div>
   )}
 
-  {/* Online price - normal */}
+  {/* Online price */}
   {p.online_price && (
-    <span className="online" style={{ color: "#555", marginRight: "8px" }}>
-      ₹{p.online_price}
-    </span>
+    <div className="online" style={{ color: "#555" }}>
+      Online ₹{p.online_price}
+    </div>
   )}
 
-  {/* DB Price - highlight */}
-  <span className="dbprice" style={{ fontWeight: "bold", color: "green", fontSize: "18px" }}>
-    ₹{p.db_price}
-  </span>
+  {/* DB PRICE BADGE */}
+  <div className="db-badge">
+    <div className="db-label">DB PRICE</div>
+    <div className="db-value">₹{p.db_price}</div>
+  </div>
 
 </div>
 
