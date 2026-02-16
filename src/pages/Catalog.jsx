@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabase";
 import "../styles/catalog.css";
 
+
 export default function Catalog() {
+  const [searchParams] = useSearchParams();
+
   const [tab, setTab] = useState("deals");
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -32,6 +36,20 @@ export default function Catalog() {
 
       setCategories(data || []);
     };
+useEffect(() => {
+  const itemId = searchParams.get("item");
+
+  if (itemId) {
+    setTimeout(() => {
+      const el = document.getElementById(`item-${itemId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.style.outline = "3px solid gold";
+      }
+    }, 800);
+  }
+}, [searchParams]);
+
 
     loadCategories();
   }, []);
@@ -144,7 +162,7 @@ export default function Catalog() {
         {activeCategory && (
           <div className="product-grid">
             {products.map((p) => (
-              <div key={p.id} className="product-card">
+              <div className="product-card" id={`item-${item.id}`}>
 
                 <img
                   src={p.image_url || "/no-image.png"}
