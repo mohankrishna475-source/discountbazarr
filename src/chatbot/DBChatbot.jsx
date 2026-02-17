@@ -49,10 +49,8 @@ export default function DBChatbot() {
   };
 
   const goToProduct = (item) => {
-   window.location.href =
-  `/daily-deals?item=${item.id}&cat=${item.subcategory_slug}`;
+  window.location.href = `/?tab=deals&cat=${subcategorySlug}&item=${itemId}`;
 
-  };
 
   return (
     <>

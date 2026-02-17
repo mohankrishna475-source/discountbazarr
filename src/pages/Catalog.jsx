@@ -5,12 +5,28 @@ import "../styles/catalog.css";
 
 
 export default function Catalog() {
+
   const [searchParams] = useSearchParams();
 
   const [tab, setTab] = useState("deals");
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
+
+  // ✅ READ TAB + CATEGORY FROM URL
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    const catParam = searchParams.get("cat");
+
+    if (tabParam) {
+      setTab(tabParam);
+    }
+
+    if (catParam) {
+      setActiveCategory(catParam);
+    }
+  }, [searchParams]);
+
 
   // 🔹 CATEGORY ICON MAP
   const categoryIcons = {
@@ -41,20 +57,20 @@ useEffect(() => {
 }, []);
 
 
-// ✅ SCROLL TO ITEM FROM CHATBOT
-useEffect(() => {
-  const itemId = searchParams.get("item");
+  // ✅ SCROLL TO ITEM FROM CHATBOT
+  useEffect(() => {
+    const itemId = searchParams.get("item");
 
-  if (itemId) {
-    setTimeout(() => {
-      const el = document.getElementById(`item-${itemId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.style.outline = "3px solid gold";
-      }
-    }, 800);
-  }
-}, [searchParams]);
+    if (itemId && products.length > 0) {
+      setTimeout(() => {
+        const el = document.getElementById(`item-${itemId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.style.outline = "3px solid gold";
+        }
+      }, 300);
+    }
+  }, [searchParams, products]);
 
   // 🔹 LOAD PRODUCTS
   useEffect(() => {
