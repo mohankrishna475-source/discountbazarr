@@ -164,7 +164,7 @@ useEffect(() => {
         {activeCategory && (
           <div className="product-grid">
             {products.map((p) => (
-              <div className="product-card" id={`item-${item.id}`}>
+              <div className="product-card" id={`item-${p.id}`}>
 
                 <img
                   src={p.image_url || "/no-image.png"}
