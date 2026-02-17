@@ -25,17 +25,23 @@ export default function Catalog() {
     "Stationary Items": "📚",
   };
 
-  // 🔹 LOAD SUBCATEGORIES
-  useEffect(() => {
-    const loadCategories = async () => {
-      const { data } = await supabase
-        .from("subcategories")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+  // ✅ LOAD SUBCATEGORIES
+useEffect(() => {
+  const loadCategories = async () => {
+    const { data } = await supabase
+      .from("subcategories")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
 
-      setCategories(data || []);
-    };
+    setCategories(data || []);
+  };
+
+  loadCategories();
+}, []);
+
+
+// ✅ SCROLL TO ITEM FROM CHATBOT
 useEffect(() => {
   const itemId = searchParams.get("item");
 
@@ -49,10 +55,6 @@ useEffect(() => {
     }, 800);
   }
 }, [searchParams]);
-
-
-    loadCategories();
-  }, []);
 
   // 🔹 LOAD PRODUCTS
   useEffect(() => {
