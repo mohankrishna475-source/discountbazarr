@@ -44,13 +44,16 @@ export default function DBChatbot() {
 
   const goBack = () => {
     if (step === "category") setStep("price");
-    if (step === "results") setStep("category");
-    if (step === "custom") setStep("price");
+    else if (step === "results") setStep("category");
+    else if (step === "custom") setStep("price");
   };
 
   const goToProduct = (item) => {
-  window.location.href = `/?tab=deals&cat=${subcategorySlug}&item=${itemId}`;
+    const itemId = item.id;
+    const subcategorySlug = item.subcategory_slug;
 
+    window.location.href = `/?tab=deals&cat=${subcategorySlug}&item=${itemId}`;
+  };
 
   return (
     <>
@@ -68,7 +71,6 @@ export default function DBChatbot() {
           <div style={headerStyle}>Discount Bazaar Assistant</div>
 
           <div style={bodyStyle}>
-            {/* BACK BUTTON */}
             {step !== "price" && (
               <button onClick={goBack} style={backBtnStyle}>
                 ← Back
@@ -93,16 +95,13 @@ export default function DBChatbot() {
                   </button>
                 ))}
 
-                <button
-                  style={btnStyle}
-                  onClick={() => setStep("custom")}
-                >
+                <button style={btnStyle} onClick={() => setStep("custom")}>
                   Custom
                 </button>
               </>
             )}
 
-            {/* STEP CUSTOM PRICE */}
+            {/* CUSTOM PRICE */}
             {step === "custom" && (
               <>
                 <div style={msgStyle}>Enter max price</div>
@@ -127,7 +126,7 @@ export default function DBChatbot() {
               </>
             )}
 
-            {/* STEP 2 – CATEGORY */}
+            {/* CATEGORY */}
             {step === "category" && (
               <>
                 <div style={msgStyle}>📦 Select category</div>
@@ -136,9 +135,7 @@ export default function DBChatbot() {
                   <button
                     key={i}
                     style={btnStyle}
-                    onClick={() =>
-                      fetchItems(range.min, range.max, c.slug)
-                    }
+                    onClick={() => fetchItems(range.min, range.max, c.slug)}
                   >
                     {c.name}
                   </button>
@@ -146,33 +143,23 @@ export default function DBChatbot() {
               </>
             )}
 
-            {/* STEP 3 – RESULTS */}
+            {/* RESULTS */}
             {step === "results" && (
               <>
                 <div style={msgStyle}>🛍️ Items found</div>
 
-                {loading && (
-                  <div style={typingStyle}>Typing...</div>
-                )}
+                {loading && <div style={typingStyle}>Typing...</div>}
 
-                {items.map((item, i) => (
+                {items.map((item) => (
                   <div
-                    key={i}
+                    key={item.id}
                     style={cardStyle}
                     onClick={() => goToProduct(item)}
                   >
-                    <img
-                      src={item.image_url}
-                      alt=""
-                      style={imgStyle}
-                    />
+                    <img src={item.image_url} alt="" style={imgStyle} />
                     <div>
-                      <div style={{ fontWeight: "600" }}>
-                        {item.title}
-                      </div>
-                      <div style={priceStyle}>
-                        ₹{item.db_price}
-                      </div>
+                      <div style={{ fontWeight: "600" }}>{item.title}</div>
+                      <div style={priceStyle}>₹{item.db_price}</div>
                     </div>
                   </div>
                 ))}
