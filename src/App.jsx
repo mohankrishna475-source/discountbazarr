@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 import Catalog from "./pages/Catalog";
 import AdminLogin from "./admin/AdminLogin";
@@ -7,12 +7,22 @@ import AdminDashboard from "./admin/AdminDashboard";
 import DBChatbot from "./chatbot/DBChatbot";
 
 function App() {
-  /* 🛒 CART STATE */
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  /* 🛒 CART STATE (load from localStorage) */
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem("db_cart");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  /* 🔎 SEARCH STATE */
+  /* 🔍 SEARCH STATE */
   const [searchTerm, setSearchTerm] = useState("");
+
+  /* 🛒 CART PANEL TOGGLE */
+  const [showCart, setShowCart] = useState(false);
+
+  /* 💾 SAVE CART TO localStorage whenever cart changes */
+  useEffect(() => {
+    localStorage.setItem("db_cart", JSON.stringify(cart));
+  }, [cart]);
 
   /* ➕ ADD TO CART */
   const addToCart = (product) => {
@@ -25,15 +35,7 @@ function App() {
         );
       }
 
-      return [
-        ...prev,
-        {
-          id: product.id,
-          title: product.title,
-          price: product.db_price,
-          qty: 1,
-        },
-      ];
+      return [...prev, { ...product, qty: 1 }];
     });
   };
 
@@ -43,41 +45,39 @@ function App() {
   };
 
   /* 💰 TOTAL PRICE */
-  const totalPrice = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  }, [cart]);
+  const totalPrice = cart.reduce(
+    (sum, item) => sum + item.db_price * item.qty,
+    0
+  );
 
-  /* 📲 WHATSAPP BULK ORDER */
-  const sendBulkWhatsApp = () => {
+  /* 📲 WHATSAPP BULK MESSAGE */
+  const sendWhatsAppOrder = () => {
     if (cart.length === 0) return;
 
-    const phoneNumber = "918328364086"; // 👉 నీ WhatsApp number
+    const phone = "918238364086"; // ⚠️ WhatsApp number with country code
 
-    let message = "🛍️ *DISCOUNT BAZAAR ORDER* 🛍️%0A";
-    message += "━━━━━━━━━━━━━━━━━━%0A";
-    message += "👋 Hi Discount Bazaar,%0A";
-    message += "I want to order:%0A%0A";
+    const itemsText = cart
+      .map(
+        (item, i) =>
+          `${i + 1}. ${item.title} (Qty: ${item.qty}) – ₹${
+            item.db_price * item.qty
+          }`
+      )
+      .join("%0A");
 
-    cart.forEach((item) => {
-      message += `🔹 *${item.title}*%0A`;
-      message += `   Qty: ${item.qty}%0A`;
-      message += `   Price: ₹${item.price * item.qty}%0A%0A`;
-    });
+    const message =
+      `🛍️ *Discount Bazarr Order*%0A%0A` +
+      `Hello 👋%0AI want to order the following items:%0A%0A` +
+      `${itemsText}%0A%0A` +
+      `💰 *Total: ₹${totalPrice}*%0A%0A` +
+      `Please confirm availability.`;
 
-    message += "━━━━━━━━━━━━━━━━━━%0A";
-    message += `💰 *Grand Total: ₹${totalPrice}*%0A`;
-    message += "📍 Please share stock details.%0A";
-    message += "🙏 Thank you";
-
-    window.open(
-      `https://wa.me/${phoneNumber}?text=${message}`,
-      "_blank"
-    );
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
   return (
     <BrowserRouter>
-      {/* 🔝 NAVBAR */}
+      {/* 🔹 NAVBAR */}
       <div style={navStyle}>
         <div style={logoStyle}>Discount Bazarr</div>
 
@@ -90,28 +90,28 @@ function App() {
         />
 
         <div style={navRight}>
-          <div
-            style={cartIconStyle}
-            onClick={() => setIsCartOpen(!isCartOpen)}
-          >
+          <div style={cartIconStyle} onClick={() => setShowCart(!showCart)}>
             🛒 Cart ({cart.length})
           </div>
+
           <div style={loginStyle}>Login</div>
         </div>
       </div>
 
-      {/* 🛒 CART PANEL */}
-      {isCartOpen && (
+      {/* 🔹 CART PANEL (ONLY WHEN CLICK CART) */}
+      {showCart && (
         <div style={cartPanelStyle}>
           <h3>Your Cart</h3>
 
-          {cart.length === 0 && <p>No items</p>}
+          {cart.length === 0 && <p>No items in cart</p>}
 
           {cart.map((item) => (
             <div key={item.id} style={cartItemStyle}>
-              <div>{item.title}</div>
-              <div>Qty: {item.qty}</div>
-              <div>₹{item.price * item.qty}</div>
+              <div>
+                <strong>{item.title}</strong>
+                <div>Qty: {item.qty}</div>
+                <div>₹{item.db_price * item.qty}</div>
+              </div>
 
               <button
                 style={removeBtnStyle}
@@ -126,10 +126,7 @@ function App() {
             <>
               <h4>Total: ₹{totalPrice}</h4>
 
-              <button
-                style={whatsappBtnStyle}
-                onClick={sendBulkWhatsApp}
-              >
+              <button style={orderBtnStyle} onClick={sendWhatsAppOrder}>
                 Order All on WhatsApp
               </button>
             </>
@@ -137,25 +134,23 @@ function App() {
         </div>
       )}
 
-      {/* 📄 ROUTES */}
+      {/* 🔹 ROUTES */}
       <Routes>
         <Route
           path="/"
           element={
             <Catalog
-              searchTerm={searchTerm}
               addToCart={addToCart}
+              searchTerm={searchTerm}
             />
           }
         />
+
         <Route path="/admin" element={<AdminLogin />} />
-        <Route
-          path="/admin/dashboard"
-          element={<AdminDashboard />}
-        />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
 
-      {/* 🤖 CHATBOT GLOBAL */}
+      {/* 🔹 CHATBOT GLOBAL */}
       <DBChatbot />
     </BrowserRouter>
   );
@@ -170,14 +165,11 @@ const navStyle = {
   justifyContent: "space-between",
   alignItems: "center",
   padding: "10px 20px",
-  background: "#0f172a",
+  background: "#1f2937",
   color: "#fff",
 };
 
-const logoStyle = {
-  fontWeight: "bold",
-  fontSize: "18px",
-};
+const logoStyle = { fontWeight: "bold", fontSize: "18px" };
 
 const searchStyle = {
   width: "40%",
@@ -194,6 +186,7 @@ const navRight = {
 
 const cartIconStyle = {
   cursor: "pointer",
+  fontWeight: "bold",
 };
 
 const loginStyle = {
@@ -202,9 +195,9 @@ const loginStyle = {
 
 const cartPanelStyle = {
   position: "fixed",
+  right: 0,
   top: "60px",
-  right: "0",
-  width: "300px",
+  width: "320px",
   height: "100%",
   background: "#fff",
   boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
@@ -214,27 +207,25 @@ const cartPanelStyle = {
 };
 
 const cartItemStyle = {
-  borderBottom: "1px solid #eee",
-  paddingBottom: "8px",
-  marginBottom: "8px",
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: "10px",
 };
 
 const removeBtnStyle = {
   background: "red",
   color: "#fff",
   border: "none",
-  padding: "4px 8px",
+  padding: "5px 8px",
   cursor: "pointer",
-  marginTop: "5px",
 };
 
-const whatsappBtnStyle = {
+const orderBtnStyle = {
   width: "100%",
+  padding: "10px",
   background: "green",
   color: "#fff",
   border: "none",
-  padding: "10px",
   marginTop: "10px",
   cursor: "pointer",
-  fontWeight: "bold",
 };
