@@ -54,7 +54,7 @@ function App() {
   const sendWhatsAppOrder = () => {
     if (cart.length === 0) return;
 
-    const phone = "918238364086"; // ⚠️ WhatsApp number with country code
+    const phone = "918328364086"; // ⚠️ WhatsApp number with country code
 
     const itemsText = cart
       .map(
