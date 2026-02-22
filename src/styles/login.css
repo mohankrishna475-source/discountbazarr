@@ -1,0 +1,14 @@
+.login-popup {
+  width: 280px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.login-popup input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}

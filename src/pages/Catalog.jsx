@@ -4,7 +4,6 @@ import { supabase } from "../supabase";
 import "../styles/catalog.css";
 
 export default function Catalog({ addToCart, searchTerm }) {
-
   const [searchParams] = useSearchParams();
 
   const [tab, setTab] = useState("deals");
@@ -12,7 +11,7 @@ export default function Catalog({ addToCart, searchTerm }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
 
-  // ✅ READ TAB + CATEGORY FROM URL
+  /* 🔹 READ TAB FROM URL */
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     const catParam = searchParams.get("cat");
@@ -21,7 +20,7 @@ export default function Catalog({ addToCart, searchTerm }) {
     if (catParam) setActiveCategory(catParam);
   }, [searchParams]);
 
-  // 🔹 CATEGORY ICON MAP
+  /* 🔹 CATEGORY ICONS */
   const categoryIcons = {
     "Kitchen Appliances": "🍳",
     "Premium Footwear": "👟",
@@ -34,7 +33,7 @@ export default function Catalog({ addToCart, searchTerm }) {
     "Stationary Items": "📚",
   };
 
-  // ✅ LOAD SUBCATEGORIES
+  /* 🔹 LOAD CATEGORIES */
   useEffect(() => {
     const loadCategories = async () => {
       const { data } = await supabase
@@ -49,7 +48,7 @@ export default function Catalog({ addToCart, searchTerm }) {
     loadCategories();
   }, []);
 
-  // ✅ LOAD PRODUCTS
+  /* 🔹 LOAD PRODUCTS */
   useEffect(() => {
     if (!activeCategory) return;
 
@@ -65,53 +64,25 @@ export default function Catalog({ addToCart, searchTerm }) {
     loadProducts();
   }, [activeCategory]);
 
-  // ✅ SCROLL TO ITEM FROM CHATBOT
-  useEffect(() => {
-    const itemId = searchParams.get("item");
-
-    if (itemId && products.length > 0) {
-      setTimeout(() => {
-        const el = document.getElementById(`item-${itemId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-          el.style.outline = "3px solid gold";
-        }
-      }, 300);
-    }
-  }, [searchParams, products]);
-
-  // ✅ 🔍 SEARCH FILTER
+  /* 🔍 SEARCH FILTER */
   const filteredProducts = products.filter((item) => {
     if (!searchTerm) return true;
-
-    return item.title
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    return item.title?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
-    <div className="page-layout">
-      {/* 🔹 LEFT SIDEBAR */}
-      <div className="sidebar">
-        <img src="/logo.png" alt="Discount Bazarr" className="sidebar-logo" />
-        <div className="official">DB OFFICIAL</div>
-        <div className="insta">@discount_bazarr</div>
-      </div>
+    <div className="catalog-page">
+      {/* 🔷 HERO */}
+      <div className="hero">
+        <h1 className="brand-title">Discount Bazaar</h1>
 
-      {/* 🔹 MAIN CONTENT */}
-      <div className="catalog-container">
-        {/* 🔹 HERO */}
-        <div className="hero">
-          <h1 className="brand-title">Discount Bazarr</h1>
-
-          <div className="tagline">
-            <div className="tag-item">🤝 Come with Trust</div>
-            <div className="tag-item">🛡 Buy with Confidence</div>
-            <div className="tag-item">😊 Move with Happiness</div>
-          </div>
+        <div className="tagline">
+          <div className="tag-item">🤝 Come with Trust</div>
+          <div className="tag-item">🛡 Buy with Confidence</div>
+          <div className="tag-item">😊 Move with Happiness</div>
         </div>
 
-        {/* 🔹 TABS */}
+        {/* 🔷 TABS */}
         <div className="fancy-tabs">
           <button
             className={tab === "deals" ? "active" : ""}
@@ -140,95 +111,86 @@ export default function Catalog({ addToCart, searchTerm }) {
             Design Lab
           </button>
         </div>
+      </div>
 
-        {/* 🔹 SUBCATEGORIES */}
-        {tab === "deals" && !activeCategory && (
-          <div className="category-grid">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="category-card"
-                onClick={() => setActiveCategory(cat.slug)}
-              >
-                <div className="cat-icon">
-                  {categoryIcons[cat.name] || "🛒"}
-                </div>
-                <div className="category-name">{cat.name}</div>
-                <div className="stock">Stock Loaded</div>
+      {/* 🔷 CATEGORY GRID */}
+      {tab === "deals" && !activeCategory && (
+        <div className="category-grid">
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              className="category-card"
+              onClick={() => setActiveCategory(cat.slug)}
+            >
+              <div className="cat-icon">
+                {categoryIcons[cat.name] || "🛒"}
               </div>
-            ))}
-          </div>
-        )}
+              <div className="category-name">{cat.name}</div>
+              <div className="stock">Stock Loaded</div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* 🔹 PRODUCTS GRID */}
-        {activeCategory && (
-          <div className="product-grid">
-            {/* ❗ NO RESULTS MESSAGE */}
-            {filteredProducts.length === 0 && (
-              <div style={{ padding: "20px", fontWeight: "bold" }}>
-                No products found
-              </div>
-            )}
+      {/* 🔷 PRODUCTS GRID */}
+      {activeCategory && (
+        <div className="product-grid">
+          {filteredProducts.length === 0 && (
+            <div style={{ padding: "20px", fontWeight: "bold" }}>
+              No products found
+            </div>
+          )}
 
-            {filteredProducts.map((p) => (
-              <div className="product-card" id={`item-${p.id}`} key={p.id}>
-                <img
-                  src={p.image_url || "/no-image.png"}
-                  alt={p.title}
-                />
+          {filteredProducts.map((p) => (
+            <div className="product-card" key={p.id}>
+              <img src={p.image_url || "/no-image.png"} alt={p.title} />
 
-                <h3 className="title">{p.title}</h3>
+              <h3 className="title">{p.title}</h3>
 
-                <div className="price-box">
-                  {p.mrp && <div className="mrp">₹{p.mrp}</div>}
+              <div className="price-box">
+                {p.mrp && <div className="mrp">₹{p.mrp}</div>}
 
-                  {p.online_price && (
-                    <div className="online">
-                      Online ₹{p.online_price}
-                    </div>
-                  )}
-
-                  <div className="db-badge">
-                    <div className="db-label">DB PRICE</div>
-                    <div className="db-value">₹{p.db_price}</div>
-                  </div>
-                </div>
-
-                {p.online_price && p.db_price && (
-                  <div className="discount">
-                    {Math.round(
-                      ((p.online_price - p.db_price) /
-                        p.online_price) *
-                        100
-                    )}
-                    % OFF
-                  </div>
+                {p.online_price && (
+                  <div className="online">Online ₹{p.online_price}</div>
                 )}
 
-               <button
-  className="whatsapp-btn"
-  onClick={() =>
-    window.open(
-      `https://wa.me/918238364086?text=I want ${p.title}`,
-      "_blank"
-    )
-  }
->
-  Order on WhatsApp
-</button>
-
-<button
-  className="cart-btn"
-  onClick={() => addToCart(p)}
->
-  Add to Cart
-</button>
-
+                <div className="db-badge">
+                  <div className="db-label">DB PRICE</div>
+                  <div className="db-value">₹{p.db_price}</div>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {p.online_price && p.db_price && (
+                <div className="discount">
+                  {Math.round(
+                    ((p.online_price - p.db_price) / p.online_price) * 100
+                  )}
+                  % OFF
+                </div>
+              )}
+
+              <button
+                className="whatsapp-btn"
+                onClick={() =>
+                  window.open(
+                    `https://wa.me/918328364086?text=I want ${p.title}`,
+                    "_blank"
+                  )
+                }
+              >
+                Order on WhatsApp
+              </button>
+
+              <button
+                className="cart-btn"
+                onClick={() => addToCart(p)}
+              >
+                Add to Cart
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

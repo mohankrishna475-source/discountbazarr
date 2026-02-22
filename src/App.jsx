@@ -1,156 +1,172 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-
+import { supabase } from "./lib/supabaseClient";
 import Catalog from "./pages/Catalog";
+import Cart from "./pages/Cart";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import DBChatbot from "./chatbot/DBChatbot";
+import PhoneLogin from "./components/PhoneLogin";
+
+/* 🔷 NAVBAR COMPONENT */
+function Navbar({ user, setUser, cartCount, setShowLogin, searchTerm, setSearchTerm }) {
+  const navigate = useNavigate();
+
+  return (
+    <div style={navStyle}>
+      {/* LEFT – LOGO + BRAND */}
+      <div style={navLeft}>
+        <img src="/logo.png" alt="logo" style={logoImg} />
+        <div style={logoText}>Discount Bazaar</div>
+      </div>
+
+      {/* CENTER – SEARCH */}
+      <input
+        type="text"
+        placeholder="Search products..."
+        style={searchStyle}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+
+      {/* RIGHT – CART + LOGIN */}
+      <div style={navRight}>
+        <div style={cartIconStyle} onClick={() => navigate("/cart")}>
+          🛒 Cart <span style={cartBadge}>{cartCount}</span>
+        </div>
+
+        {user ? (
+          <button
+            style={logoutBtn}
+            onClick={() => {
+              setUser(null);
+              localStorage.removeItem("db_user_phone");
+            }}
+          >
+            Logout
+          </button>
+        ) : (
+          <button style={loginBtn} onClick={() => setShowLogin(true)}>
+            Login
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function App() {
-  /* 🛒 CART STATE (load from localStorage) */
-  const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem("db_cart");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  /* 🔍 SEARCH STATE */
+  const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* 🛒 CART PANEL TOGGLE */
-  const [showCart, setShowCart] = useState(false);
-
-  /* 💾 SAVE CART TO localStorage whenever cart changes */
+  /* 🔄 LOAD USER FROM LOCAL */
   useEffect(() => {
-    localStorage.setItem("db_cart", JSON.stringify(cart));
-  }, [cart]);
+    const savedPhone = localStorage.getItem("db_user_phone");
+    if (savedPhone) {
+      setUser({ phone: savedPhone });
+    }
+  }, []);
+
+  /* 📦 FETCH CART COUNT */
+  const fetchCartCount = async (phone) => {
+    if (!phone) return;
+
+    const { count } = await supabase
+      .from("cart_items")
+      .select("*", { count: "exact", head: true })
+      .eq("user_phone", phone);
+
+    setCartCount(count || 0);
+  };
+
+  /* 🔄 UPDATE CART COUNT WHEN LOGIN */
+  useEffect(() => {
+    if (user?.phone) {
+      fetchCartCount(user.phone);
+    } else {
+      setCartCount(0);
+    }
+  }, [user]);
 
   /* ➕ ADD TO CART */
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find((p) => p.id === product.id);
+  const addToCart = async (product) => {
+    if (!user?.phone) {
+      setShowLogin(true);
+      return;
+    }
 
-      if (existing) {
-        return prev.map((p) =>
-          p.id === product.id ? { ...p, qty: p.qty + 1 } : p
-        );
-      }
+    const { data: existing } = await supabase
+      .from("cart_items")
+      .select("*")
+      .eq("user_phone", user.phone)
+      .eq("product_id", product.id)
+      .single();
 
-      return [...prev, { ...product, qty: 1 }];
-    });
-  };
+    if (existing) {
+      await supabase
+        .from("cart_items")
+        .update({ qty: existing.qty + 1 })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("cart_items").insert({
+        user_phone: user.phone,
+        product_id: product.id,
+        title: product.title,
+        db_price: product.db_price,
+        qty: 1,
+      });
+    }
 
-  /* ❌ REMOVE FROM CART */
-  const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  /* 💰 TOTAL PRICE */
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.db_price * item.qty,
-    0
-  );
-
-  /* 📲 WHATSAPP BULK MESSAGE */
-  const sendWhatsAppOrder = () => {
-    if (cart.length === 0) return;
-
-    const phone = "918328364086"; // ⚠️ WhatsApp number with country code
-
-    const itemsText = cart
-      .map(
-        (item, i) =>
-          `${i + 1}. ${item.title} (Qty: ${item.qty}) – ₹${
-            item.db_price * item.qty
-          }`
-      )
-      .join("%0A");
-
-    const message =
-      `🛍️ *Discount Bazarr Order*%0A%0A` +
-      `Hello 👋%0AI want to order the following items:%0A%0A` +
-      `${itemsText}%0A%0A` +
-      `💰 *Total: ₹${totalPrice}*%0A%0A` +
-      `Please confirm availability.`;
-
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    fetchCartCount(user.phone);
   };
 
   return (
     <BrowserRouter>
-      {/* 🔹 NAVBAR */}
-      <div style={navStyle}>
-        <div style={logoStyle}>Discount Bazarr</div>
+      {/* 🔷 NAVBAR */}
+      <Navbar
+        user={user}
+        setUser={setUser}
+        cartCount={cartCount}
+        setShowLogin={setShowLogin}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
 
-        <input
-          type="text"
-          placeholder="Search products..."
-          style={searchStyle}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-
-        <div style={navRight}>
-          <div style={cartIconStyle} onClick={() => setShowCart(!showCart)}>
-            🛒 Cart ({cart.length})
-          </div>
-
-          <div style={loginStyle}>Login</div>
-        </div>
-      </div>
-
-      {/* 🔹 CART PANEL (ONLY WHEN CLICK CART) */}
-      {showCart && (
-        <div style={cartPanelStyle}>
-          <h3>Your Cart</h3>
-
-          {cart.length === 0 && <p>No items in cart</p>}
-
-          {cart.map((item) => (
-            <div key={item.id} style={cartItemStyle}>
-              <div>
-                <strong>{item.title}</strong>
-                <div>Qty: {item.qty}</div>
-                <div>₹{item.db_price * item.qty}</div>
-              </div>
-
-              <button
-                style={removeBtnStyle}
-                onClick={() => removeFromCart(item.id)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-
-          {cart.length > 0 && (
-            <>
-              <h4>Total: ₹{totalPrice}</h4>
-
-              <button style={orderBtnStyle} onClick={sendWhatsAppOrder}>
-                Order All on WhatsApp
-              </button>
-            </>
-          )}
+      {/* 🔐 LOGIN POPUP */}
+      {showLogin && !user && (
+        <div style={loginPopupStyle}>
+          <PhoneLogin
+            onClose={() => setShowLogin(false)}
+            onLoginSuccess={(phone) => {
+              setUser({ phone });
+              localStorage.setItem("db_user_phone", phone);
+              setShowLogin(false);
+              fetchCartCount(phone);
+            }}
+          />
         </div>
       )}
 
-      {/* 🔹 ROUTES */}
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Catalog
-              addToCart={addToCart}
-              searchTerm={searchTerm}
-            />
-          }
-        />
+    {/* 🌐 ROUTES */}
+<Routes>
+  <Route
+    path="/"
+    element={
+      <Catalog
+        addToCart={addToCart}
+        searchTerm={searchTerm}
+      />
+    }
+  />
 
-        <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      </Routes>
+  {/* ✅ FIXED CART ROUTE – NO USER PROP */}
+  <Route path="/cart" element={<Cart user={user} />} />
 
-      {/* 🔹 CHATBOT GLOBAL */}
+  <Route path="/admin" element={<AdminLogin />} />
+  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+</Routes>
       <DBChatbot />
     </BrowserRouter>
   );
@@ -164,18 +180,39 @@ const navStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: "10px 20px",
-  background: "#1f2937",
+  padding: "12px 24px",
+  background: "linear-gradient(90deg, #0f172a, #1e3a8a, #06b6d4)",
   color: "#fff",
 };
 
-const logoStyle = { fontWeight: "bold", fontSize: "18px" };
+const navLeft = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const logoImg = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "50%",
+  background: "#fff",
+  padding: "3px",
+};
+
+const logoText = {
+  fontWeight: "bold",
+  fontSize: "18px",
+  background: "linear-gradient(90deg, #facc15, #f97316)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+};
 
 const searchStyle = {
   width: "40%",
-  padding: "6px",
-  borderRadius: "6px",
+  padding: "8px 14px",
+  borderRadius: "20px",
   border: "none",
+  outline: "none",
 };
 
 const navRight = {
@@ -189,43 +226,40 @@ const cartIconStyle = {
   fontWeight: "bold",
 };
 
-const loginStyle = {
-  cursor: "pointer",
+const cartBadge = {
+  background: "#facc15",
+  color: "#000",
+  padding: "3px 8px",
+  borderRadius: "50%",
+  marginLeft: "6px",
+  fontSize: "12px",
 };
 
-const cartPanelStyle = {
+const loginBtn = {
+  background: "#22c55e",
+  border: "none",
+  padding: "6px 14px",
+  borderRadius: "20px",
+  cursor: "pointer",
+  fontWeight: "bold",
+};
+
+const logoutBtn = {
+  background: "#ef4444",
+  border: "none",
+  padding: "6px 14px",
+  borderRadius: "20px",
+  cursor: "pointer",
+  color: "#fff",
+};
+
+const loginPopupStyle = {
   position: "fixed",
-  right: 0,
-  top: "60px",
-  width: "320px",
-  height: "100%",
+  top: "80px",
+  right: "20px",
   background: "#fff",
-  boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
-  padding: "15px",
-  overflowY: "auto",
+  padding: "20px",
+  borderRadius: "12px",
+  boxShadow: "0 0 15px rgba(0,0,0,0.3)",
   zIndex: 9999,
-};
-
-const cartItemStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: "10px",
-};
-
-const removeBtnStyle = {
-  background: "red",
-  color: "#fff",
-  border: "none",
-  padding: "5px 8px",
-  cursor: "pointer",
-};
-
-const orderBtnStyle = {
-  width: "100%",
-  padding: "10px",
-  background: "green",
-  color: "#fff",
-  border: "none",
-  marginTop: "10px",
-  cursor: "pointer",
 };
