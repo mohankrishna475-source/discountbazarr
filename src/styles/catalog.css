@@ -209,3 +209,94 @@
   cursor: pointer;
   font-weight: 600;
 }
+/* 📱 MOBILE OPTIMIZATION */
+@media (max-width: 768px) {
+
+  .brand-title {
+    font-size: 28px !important;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .tagline {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .fancy-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .fancy-tabs button {
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .category-card {
+    padding: 14px 10px;
+    border-radius: 12px;
+  }
+
+  .category-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .stock {
+    font-size: 11px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .product-card {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .product-card img {
+    height: 110px;
+    object-fit: contain;
+  }
+
+  .title {
+    font-size: 13px;
+    min-height: 34px;
+  }
+
+  .mrp {
+    font-size: 11px;
+  }
+
+  .online {
+    font-size: 11px;
+  }
+
+  .db-value {
+    font-size: 14px;
+  }
+
+  .discount {
+    font-size: 11px;
+  }
+
+  .whatsapp-btn,
+  .cart-btn {
+    font-size: 12px;
+    padding: 8px;
+  }
+}

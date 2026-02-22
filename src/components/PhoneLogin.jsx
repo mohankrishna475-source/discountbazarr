@@ -4,7 +4,7 @@ import "../styles/login.css";
 
 const API = "http://localhost:5000";
 
-export default function PhoneLogin({ onLoginSuccess }) {
+export default function PhoneLogin({ onLoginSuccess, onClose }) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [sent, setSent] = useState(false);
@@ -21,6 +21,31 @@ export default function PhoneLogin({ onLoginSuccess }) {
 
     return () => clearInterval(interval);
   }, [timer]);
+
+  /* 🔐 DIRECT LOGIN (NO OTP – TEMP MODE) */
+  const directLogin = async () => {
+    if (!phone) {
+      alert("Enter phone number");
+      return;
+    }
+
+    /* 🔥 SAVE USER IN SUPABASE */
+    const { error } = await supabase.from("users").upsert(
+      [{ phone }],
+      { onConflict: ["phone"] }
+    );
+
+    if (error) {
+      console.log("User insert error:", error);
+    }
+
+    /* 🔐 SAVE IN LOCAL STORAGE */
+    localStorage.setItem("db_user_phone", phone);
+
+    onLoginSuccess({ phone });
+
+    if (onClose) onClose(); // ✅ close popup
+  };
 
   /* 📩 SEND OTP */
   const sendOtp = async () => {
@@ -47,7 +72,6 @@ export default function PhoneLogin({ onLoginSuccess }) {
         setSent(true);
         setTimer(60);
 
-        // 👉 DEV MODE OTP
         if (data.devOtp) {
           console.log("DEV OTP:", data.devOtp);
           alert(`DEV OTP: ${data.devOtp}`);
@@ -83,7 +107,6 @@ export default function PhoneLogin({ onLoginSuccess }) {
       setLoading(false);
 
       if (data.success) {
-        /* 🔥 SAVE USER IN SUPABASE */
         const { error } = await supabase.from("users").upsert(
           [{ phone }],
           { onConflict: ["phone"] }
@@ -93,10 +116,11 @@ export default function PhoneLogin({ onLoginSuccess }) {
           console.log("User insert error:", error);
         }
 
-        /* 🔐 SAVE IN LOCAL STORAGE */
         localStorage.setItem("db_user_phone", phone);
 
-        onLoginSuccess(phone);
+        onLoginSuccess({ phone });
+
+        if (onClose) onClose(); // ✅ close popup
       } else {
         alert(data.message || "Invalid OTP");
       }
@@ -107,42 +131,51 @@ export default function PhoneLogin({ onLoginSuccess }) {
   };
 
   return (
-    <div className="login-popup">
-      <h3>Login with Phone</h3>
+    <div className="login-overlay" onClick={onClose}>
+      <div className="login-popup" onClick={(e) => e.stopPropagation()}>
+        <h3>Login with Phone</h3>
 
-      <input
-        type="text"
-        placeholder="Enter phone"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-      />
+        <input
+          type="text"
+          placeholder="Enter phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
 
-      {!sent && (
-        <button onClick={sendOtp} disabled={loading}>
-          {loading ? "Sending..." : "Send OTP"}
+        {/* 🔥 TEMP DIRECT LOGIN BUTTON */}
+        <button onClick={directLogin}>
+          Login (No OTP)
         </button>
-      )}
 
-      {sent && (
-        <>
-          <input
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
+        <hr />
 
-          <button onClick={verifyOtp} disabled={loading}>
-            {loading ? "Verifying..." : "Verify"}
+        {!sent && (
+          <button onClick={sendOtp} disabled={loading}>
+            {loading ? "Sending..." : "Send OTP"}
           </button>
+        )}
 
-          {timer > 0 ? (
-            <p>Resend OTP in {timer}s</p>
-          ) : (
-            <button onClick={sendOtp}>Resend OTP</button>
-          )}
-        </>
-      )}
+        {sent && (
+          <>
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+
+            <button onClick={verifyOtp} disabled={loading}>
+              {loading ? "Verifying..." : "Verify"}
+            </button>
+
+            {timer > 0 ? (
+              <p>Resend OTP in {timer}s</p>
+            ) : (
+              <button onClick={sendOtp}>Resend OTP</button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

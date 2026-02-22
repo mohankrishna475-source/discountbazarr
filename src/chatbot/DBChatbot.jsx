@@ -48,11 +48,15 @@ export default function DBChatbot() {
     else if (step === "custom") setStep("price");
   };
 
+  /* 🔴 FIXED REDIRECT + CLOSE CHATBOT */
   const goToProduct = (item) => {
-    const itemId = item.id;
     const subcategorySlug = item.subcategory_slug;
 
-    window.location.href = `/?tab=deals&cat=${subcategorySlug}&item=${itemId}`;
+    setOpen(false);
+
+    window.location.assign(
+      `/?tab=deals&cat=${subcategorySlug}`
+    );
   };
 
   return (
@@ -171,9 +175,6 @@ export default function DBChatbot() {
     </>
   );
 }
-
-/* STYLES */
-
 const floatingStyle = {
   position: "fixed",
   bottom: "20px",

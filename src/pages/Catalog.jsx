@@ -10,15 +10,18 @@ export default function Catalog({ addToCart, searchTerm }) {
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
+const [selectedItemId, setSelectedItemId] = useState(null);
 
   /* 🔹 READ TAB FROM URL */
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    const catParam = searchParams.get("cat");
+  const tabParam = searchParams.get("tab");
+  const catParam = searchParams.get("cat");
+  const itemParam = searchParams.get("item");
 
-    if (tabParam) setTab(tabParam);
-    if (catParam) setActiveCategory(catParam);
-  }, [searchParams]);
+  if (tabParam) setTab(tabParam);
+  if (catParam) setActiveCategory(catParam);
+  if (itemParam) setSelectedItemId(itemParam);
+}, [searchParams]);
 
   /* 🔹 CATEGORY ICONS */
   const categoryIcons = {
@@ -48,6 +51,7 @@ export default function Catalog({ addToCart, searchTerm }) {
     loadCategories();
   }, []);
 
+
   /* 🔹 LOAD PRODUCTS */
   useEffect(() => {
     if (!activeCategory) return;
@@ -63,6 +67,17 @@ export default function Catalog({ addToCart, searchTerm }) {
 
     loadProducts();
   }, [activeCategory]);
+
+useEffect(() => {
+  if (!selectedItemId) return;
+
+  const el = document.getElementById(`product-${selectedItemId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.style.outline = "3px solid #facc15";
+    el.style.borderRadius = "12px";
+  }
+}, [products, selectedItemId]);
 
   /* 🔍 SEARCH FILTER */
   const filteredProducts = products.filter((item) => {
@@ -142,7 +157,11 @@ export default function Catalog({ addToCart, searchTerm }) {
           )}
 
           {filteredProducts.map((p) => (
-            <div className="product-card" key={p.id}>
+           <div
+  className="product-card"
+  key={p.id}
+  id={`product-${p.id}`}
+>
               <img src={p.image_url || "/no-image.png"} alt={p.title} />
 
               <h3 className="title">{p.title}</h3>
@@ -181,6 +200,7 @@ export default function Catalog({ addToCart, searchTerm }) {
                 Order on WhatsApp
               </button>
 
+              {/* ✅ LOGIN CHECK REMOVED → DIRECT ADD */}
               <button
                 className="cart-btn"
                 onClick={() => addToCart(p)}
