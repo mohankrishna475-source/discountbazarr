@@ -46,30 +46,56 @@ export default function Cart({ user }) {
   );
 
   // 📲 BULK WHATSAPP ORDER
-  const handleBulkWhatsApp = () => {
-    if (!cartItems.length) return;
+ const handleBulkWhatsApp = () => {
+  const phoneNumber = "918328364086";
 
-    let message = "Discount Bazaar Order\n\n";
-    message += "Hello, I want to order the following items:\n\n";
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.db_price * item.qty,
+    0
+  );
 
-    cartItems.forEach((item, index) => {
-      message += `${index + 1}. ${item.title} – Qty: ${item.qty} – ₹${item.db_price}\n`;
-    });
+  const message = `
+🛒 *DISCOUNT BAZAAR – BULK ORDER*
 
-    message += `\nTotal: ₹${total}\n\nPlease confirm availability.`;
+🤝 Come with Trust | 🛡 Buy with Confidence | 😊 Move with Happiness
 
-    const encodedMessage = encodeURIComponent(message);
+Hello 👋
+I want to order the following items:
 
-    const phoneNumber = "918328364086"; // 👉 నీ WhatsApp number పెట్టు
+${cartItems
+  .map(
+    (item, i) => `
+${i + 1}. ${item.title}
+   Qty: ${item.qty}
+   Price: ₹${item.db_price}
+   Subtotal: ₹${item.db_price * item.qty}
+`
+  )
+  .join("\n")}
 
-    window.open(
-      `https://wa.me/${phoneNumber}?text=${encodedMessage}`,
-      "_blank"
-    );
-  };
+💰 *Total Amount: ₹${total}*
 
+📦 Please confirm availability
+🚚 Delivery details will be shared after confirmation
+
+🖼 Product Images:
+👉 https://yourdomain.com/cart
+
+🙏 Thank you
+– Discount Bazaar
+`;
+
+  const url =
+    "https://wa.me/" +
+    phoneNumber +
+    "?text=" +
+    encodeURIComponent(message);
+
+  window.open(url, "_blank");
+};
   return (
     <div style={{ padding: "20px" }}>
+
       {/* 🔙 BACK BUTTON */}
       <Link to="/" style={backBtn}>
         ← Back to Catalog
