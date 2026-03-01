@@ -2,39 +2,45 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabase";
 import "../styles/catalog.css";
+import SmartCart from "../components/SmartCart";
 
-export default function Catalog({ addToCart, searchTerm }) {
+export default function Catalog({
+  addToCart,
+  searchTerm,
+  cart,
+  setCart
+}) {
   const [searchParams] = useSearchParams();
 
   const [tab, setTab] = useState("deals");
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
-const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   /* 🔹 READ TAB FROM URL */
   useEffect(() => {
-  const tabParam = searchParams.get("tab");
-  const catParam = searchParams.get("cat");
-  const itemParam = searchParams.get("item");
+    const tabParam = searchParams.get("tab");
+    const catParam = searchParams.get("cat");
+    const itemParam = searchParams.get("item");
 
-  if (tabParam) setTab(tabParam);
-  if (catParam) setActiveCategory(catParam);
-  if (itemParam) setSelectedItemId(itemParam);
-}, [searchParams]);
+    if (tabParam) setTab(tabParam);
+    if (catParam) setActiveCategory(catParam);
+    if (itemParam) setSelectedItemId(itemParam);
+  }, [searchParams]);
 
   /* 🔹 CATEGORY ICONS */
   const categoryIcons = {
-    "Kitchen Appliances": "🍳",
-    "Premium Footwear": "👟",
-    "Household": "🏠",
-    "Fashion Wear": "👗",
-    "Small Appliances": "🔌",
-    "Luggage & Bags": "🧳",
-    "Home Tools": "🛠",
-    "Sports & Fitness": "🏋️",
-    "Stationary Items": "📚",
-  };
+  "Kitchen Appliances": "🍽️",
+  "Premium Footwear": "🥾",
+  "Household": "🛋️",
+  "Fashion Wear": "🧥",
+  "Small Appliances": "🧯",
+  "Luggage & Bags": "🎒",
+  "Home Tools": "🧰",
+  "Sports & Fitness": "🏃",
+  "Stationary Items": "🖊️",
+};
 
   /* 🔹 LOAD CATEGORIES */
   useEffect(() => {
@@ -50,7 +56,6 @@ const [selectedItemId, setSelectedItemId] = useState(null);
 
     loadCategories();
   }, []);
-
 
   /* 🔹 LOAD PRODUCTS */
   useEffect(() => {
@@ -68,16 +73,17 @@ const [selectedItemId, setSelectedItemId] = useState(null);
     loadProducts();
   }, [activeCategory]);
 
-useEffect(() => {
-  if (!selectedItemId) return;
+  /* 🔹 SCROLL TO SELECTED ITEM */
+  useEffect(() => {
+    if (!selectedItemId) return;
 
-  const el = document.getElementById(`product-${selectedItemId}`);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.style.outline = "3px solid #facc15";
-    el.style.borderRadius = "12px";
-  }
-}, [products, selectedItemId]);
+    const el = document.getElementById(`product-${selectedItemId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.style.outline = "3px solid #facc15";
+      el.style.borderRadius = "12px";
+    }
+  }, [products, selectedItemId]);
 
   /* 🔍 SEARCH FILTER */
   const filteredProducts = products.filter((item) => {
@@ -89,7 +95,7 @@ useEffect(() => {
     <div className="catalog-page">
       {/* 🔷 HERO */}
       <div className="hero">
-        <h1 className="brand-title">Discount Bazaar</h1>
+        <h1 className="brand-title">Discount Bazarr</h1>
 
         <div className="tagline">
           <div className="tag-item">🤝 Come with Trust</div>
@@ -157,11 +163,7 @@ useEffect(() => {
           )}
 
           {filteredProducts.map((p) => (
-           <div
-  className="product-card"
-  key={p.id}
-  id={`product-${p.id}`}
->
+            <div className="product-card" key={p.id} id={`product-${p.id}`}>
               <img src={p.image_url || "/no-image.png"} alt={p.title} />
 
               <h3 className="title">{p.title}</h3>
@@ -188,6 +190,7 @@ useEffect(() => {
                 </div>
               )}
 
+              {/* 🔹 WHATSAPP BUTTON */}
               <button
                 className="whatsapp-btn"
                 onClick={() =>
@@ -200,17 +203,33 @@ useEffect(() => {
                 Order on WhatsApp
               </button>
 
-              {/* ✅ LOGIN CHECK REMOVED → DIRECT ADD */}
+              {/* 🔹 ADD TO CART */}
               <button
-                className="cart-btn"
-                onClick={() => addToCart(p)}
-              >
-                Add to Cart
-              </button>
+  className="cart-btn"
+  onClick={() => {
+    // 🔷 SMART CART
+    setCart((prev) => [
+      ...prev,
+      {
+        id: p.id,
+        name: p.title,
+        discount_price: p.db_price,
+      },
+    ]);
+
+    // 🔷 MY CART (SUPABASE)
+    addToCart(p);
+  }}
+>
+  Add to Cart
+</button>
             </div>
           ))}
         </div>
       )}
+
+      {/* 🔷 SMART CART */}
+      <SmartCart cart={cart} setCart={setCart} />
     </div>
   );
 }

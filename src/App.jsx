@@ -9,18 +9,23 @@ import DBChatbot from "./chatbot/DBChatbot";
 import PhoneLogin from "./components/PhoneLogin";
 
 /* 🔷 NAVBAR COMPONENT */
-function Navbar({ user, setUser, cartCount, setShowLogin, searchTerm, setSearchTerm }) {
+function Navbar({
+  user,
+  setUser,
+  cartCount,
+  setShowLogin,
+  searchTerm,
+  setSearchTerm,
+}) {
   const navigate = useNavigate();
 
   return (
     <div style={navStyle}>
-      {/* LEFT – LOGO + BRAND */}
       <div style={navLeft}>
         <img src="/logo.png" alt="logo" style={logoImg} />
-        <div style={logoText}>Discount Bazaar</div>
+        <div style={logoText}>Discount BAZARR</div>
       </div>
 
-      {/* CENTER – SEARCH */}
       <input
         type="text"
         placeholder="Search products..."
@@ -29,10 +34,9 @@ function Navbar({ user, setUser, cartCount, setShowLogin, searchTerm, setSearchT
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* RIGHT – CART + LOGIN */}
       <div style={navRight}>
         <div style={cartIconStyle} onClick={() => navigate("/cart")}>
-          🛒 Cart <span style={cartBadge}>{cartCount}</span>
+          🛒 My Cart <span style={cartBadge}>{cartCount}</span>
         </div>
 
         {user ? (
@@ -41,6 +45,8 @@ function Navbar({ user, setUser, cartCount, setShowLogin, searchTerm, setSearchT
             onClick={() => {
               setUser(null);
               localStorage.removeItem("db_user_phone");
+              setCartCount(0);
+              setCart([]);
             }}
           >
             Logout
@@ -61,7 +67,10 @@ function App() {
   const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* 🔄 LOAD USER FROM LOCAL */
+  // 🔷 GLOBAL SMART CART
+  const [cart, setCart] = useState([]);
+
+  /* 🔄 LOAD USER */
   useEffect(() => {
     const savedPhone = localStorage.getItem("db_user_phone");
     if (savedPhone) {
@@ -81,7 +90,7 @@ function App() {
     setCartCount(count || 0);
   };
 
-  /* 🔄 UPDATE CART COUNT WHEN LOGIN */
+  /* 🔄 UPDATE COUNT WHEN USER CHANGES */
   useEffect(() => {
     if (user?.phone) {
       fetchCartCount(user.phone);
@@ -90,7 +99,7 @@ function App() {
     }
   }, [user]);
 
-  /* ➕ ADD TO CART */
+  /* ➕ ADD TO CART (COUNT FIX HERE) */
   const addToCart = async (product) => {
     if (!user?.phone) {
       setShowLogin(true);
@@ -119,12 +128,12 @@ function App() {
       });
     }
 
-    fetchCartCount(user.phone);
+    // 🔥 THIS LINE FIXES MY CART COUNT
+    await fetchCartCount(user.phone);
   };
 
   return (
     <BrowserRouter>
-      {/* 🔷 NAVBAR */}
       <Navbar
         user={user}
         setUser={setUser}
@@ -134,7 +143,6 @@ function App() {
         setSearchTerm={setSearchTerm}
       />
 
-      {/* 🔐 LOGIN POPUP */}
       {showLogin && !user && (
         <div style={loginPopupStyle}>
           <PhoneLogin
@@ -149,24 +157,23 @@ function App() {
         </div>
       )}
 
-    {/* 🌐 ROUTES */}
-<Routes>
-  <Route
-    path="/"
-    element={
-      <Catalog
-        addToCart={addToCart}
-        searchTerm={searchTerm}
-      />
-    }
-  />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Catalog
+              addToCart={addToCart}
+              searchTerm={searchTerm}
+              cart={cart}
+              setCart={setCart}
+            />
+          }
+        />
+        <Route path="/cart" element={<Cart user={user} />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      </Routes>
 
-  {/* ✅ FIXED CART ROUTE – NO USER PROP */}
-  <Route path="/cart" element={<Cart user={user} />} />
-
-  <Route path="/admin" element={<AdminLogin />} />
-  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-</Routes>
       <DBChatbot />
     </BrowserRouter>
   );
@@ -208,7 +215,8 @@ const logoText = {
 };
 
 const searchStyle = {
-  width: "40%",
+  width: "100%",
+  maxWidth: "420px",
   padding: "8px 14px",
   borderRadius: "20px",
   border: "none",
