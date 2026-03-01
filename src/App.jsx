@@ -7,6 +7,7 @@ import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import DBChatbot from "./chatbot/DBChatbot";
 import PhoneLogin from "./components/PhoneLogin";
+import "./styles/catalog.css";
 
 /* 🔷 NAVBAR COMPONENT */
 function Navbar({
@@ -16,32 +17,39 @@ function Navbar({
   setShowLogin,
   searchTerm,
   setSearchTerm,
+  setCart,
+  setCartCount,
 }) {
   const navigate = useNavigate();
 
   return (
-    <div style={navStyle}>
-      <div style={navLeft}>
-        <img src="/logo.png" alt="logo" style={logoImg} />
-        <div style={logoText}>Discount BAZARR</div>
+    <div className="navbar">
+      {/* LEFT */}
+      <div className="nav-left">
+        <div className="logo-circle">
+          <img src="/logo.png" alt="logo" className="db-logo" />
+        </div>
+        <div className="nav-title">Discount BAZARR</div>
       </div>
 
+      {/* SEARCH */}
       <input
         type="text"
         placeholder="Search products..."
-        style={searchStyle}
+        className="search-bar"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      <div style={navRight}>
-        <div style={cartIconStyle} onClick={() => navigate("/cart")}>
-          🛒 My Cart <span style={cartBadge}>{cartCount}</span>
+      {/* RIGHT */}
+      <div className="nav-right">
+        <div className="cart-icon" onClick={() => navigate("/cart")}>
+          🛒 My Cart <span className="cart-count">{cartCount}</span>
         </div>
 
         {user ? (
           <button
-            style={logoutBtn}
+            className="logout-btn"
             onClick={() => {
               setUser(null);
               localStorage.removeItem("db_user_phone");
@@ -52,7 +60,7 @@ function Navbar({
             Logout
           </button>
         ) : (
-          <button style={loginBtn} onClick={() => setShowLogin(true)}>
+          <button className="login-btn" onClick={() => setShowLogin(true)}>
             Login
           </button>
         )}
@@ -99,7 +107,7 @@ function App() {
     }
   }, [user]);
 
-  /* ➕ ADD TO CART (COUNT FIX HERE) */
+  /* ➕ ADD TO CART (COUNT FIX) */
   const addToCart = async (product) => {
     if (!user?.phone) {
       setShowLogin(true);
@@ -128,7 +136,6 @@ function App() {
       });
     }
 
-    // 🔥 THIS LINE FIXES MY CART COUNT
     await fetchCartCount(user.phone);
   };
 
@@ -141,10 +148,12 @@ function App() {
         setShowLogin={setShowLogin}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        setCart={setCart}
+        setCartCount={setCartCount}
       />
 
       {showLogin && !user && (
-        <div style={loginPopupStyle}>
+        <div className="login-popup">
           <PhoneLogin
             onClose={() => setShowLogin(false)}
             onLoginSuccess={(phone) => {
@@ -180,7 +189,6 @@ function App() {
 }
 
 export default App;
-
 /* 🎨 STYLES */
 
 const navStyle = {
