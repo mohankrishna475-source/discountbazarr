@@ -97,11 +97,9 @@ export default function Catalog({
       <div className="hero">
         <h1 className="brand-title">Discount Bazarr</h1>
 
-        <div className="tagline">
-          <div className="tag-item">🤝 Come with Trust</div>
-          <div className="tag-item">🛡 Buy with Confidence</div>
-          <div className="tag-item">😊 Move with Happiness</div>
-        </div>
+        <div className="tagline-single">
+  Come with Trust • Buy with Confidence • Move with Happiness
+</div>
 
         {/* 🔷 TABS */}
         <div className="fancy-tabs">

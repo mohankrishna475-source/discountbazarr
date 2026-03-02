@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
 import Catalog from "./pages/Catalog";
@@ -7,67 +7,8 @@ import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import DBChatbot from "./chatbot/DBChatbot";
 import PhoneLogin from "./components/PhoneLogin";
+import Navbar from "./components/Navbar";
 import "./styles/catalog.css";
-
-/* 🔷 NAVBAR COMPONENT */
-function Navbar({
-  user,
-  setUser,
-  cartCount,
-  setShowLogin,
-  searchTerm,
-  setSearchTerm,
-  setCart,
-  setCartCount,
-}) {
-  const navigate = useNavigate();
-
-  return (
-    <div className="navbar">
-      {/* LEFT */}
-      <div className="nav-left">
-        <div className="logo-circle">
-          <img src="/logo.png" alt="logo" className="db-logo" />
-        </div>
-        <div className="nav-title">Discount BAZARR</div>
-      </div>
-
-      {/* SEARCH */}
-      <input
-        type="text"
-        placeholder="Search products..."
-        className="search-bar"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {/* RIGHT */}
-      <div className="nav-right">
-        <div className="cart-icon" onClick={() => navigate("/cart")}>
-          🛒 My Cart <span className="cart-count">{cartCount}</span>
-        </div>
-
-        {user ? (
-          <button
-            className="logout-btn"
-            onClick={() => {
-              setUser(null);
-              localStorage.removeItem("db_user_phone");
-              setCartCount(0);
-              setCart([]);
-            }}
-          >
-            Logout
-          </button>
-        ) : (
-          <button className="login-btn" onClick={() => setShowLogin(true)}>
-            Login
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -107,7 +48,7 @@ function App() {
     }
   }, [user]);
 
-  /* ➕ ADD TO CART (COUNT FIX) */
+  /* ➕ ADD TO CART */
   const addToCart = async (product) => {
     if (!user?.phone) {
       setShowLogin(true);
@@ -141,17 +82,16 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* 🔷 NAVBAR */}
       <Navbar
         user={user}
-        setUser={setUser}
         cartCount={cartCount}
         setShowLogin={setShowLogin}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        setCart={setCart}
-        setCartCount={setCartCount}
       />
 
+      {/* 🔐 LOGIN POPUP */}
       {showLogin && !user && (
         <div className="login-popup">
           <PhoneLogin
@@ -166,6 +106,7 @@ function App() {
         </div>
       )}
 
+      {/* 🌐 ROUTES */}
       <Routes>
         <Route
           path="/"
@@ -183,99 +124,10 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
 
+      {/* 🤖 DB BOT */}
       <DBChatbot />
     </BrowserRouter>
   );
 }
 
 export default App;
-/* 🎨 STYLES */
-
-const navStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "12px 24px",
-  background: "linear-gradient(90deg, #0f172a, #1e3a8a, #06b6d4)",
-  color: "#fff",
-};
-
-const navLeft = {
-  display: "flex",
-  alignItems: "center",
-  gap: "10px",
-};
-
-const logoImg = {
-  width: "42px",
-  height: "42px",
-  borderRadius: "50%",
-  background: "#fff",
-  padding: "3px",
-};
-
-const logoText = {
-  fontWeight: "bold",
-  fontSize: "18px",
-  background: "linear-gradient(90deg, #facc15, #f97316)",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-};
-
-const searchStyle = {
-  width: "100%",
-  maxWidth: "420px",
-  padding: "8px 14px",
-  borderRadius: "20px",
-  border: "none",
-  outline: "none",
-};
-
-const navRight = {
-  display: "flex",
-  gap: "15px",
-  alignItems: "center",
-};
-
-const cartIconStyle = {
-  cursor: "pointer",
-  fontWeight: "bold",
-};
-
-const cartBadge = {
-  background: "#facc15",
-  color: "#000",
-  padding: "3px 8px",
-  borderRadius: "50%",
-  marginLeft: "6px",
-  fontSize: "12px",
-};
-
-const loginBtn = {
-  background: "#22c55e",
-  border: "none",
-  padding: "6px 14px",
-  borderRadius: "20px",
-  cursor: "pointer",
-  fontWeight: "bold",
-};
-
-const logoutBtn = {
-  background: "#ef4444",
-  border: "none",
-  padding: "6px 14px",
-  borderRadius: "20px",
-  cursor: "pointer",
-  color: "#fff",
-};
-
-const loginPopupStyle = {
-  position: "fixed",
-  top: "80px",
-  right: "20px",
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "12px",
-  boxShadow: "0 0 15px rgba(0,0,0,0.3)",
-  zIndex: 9999,
-};

@@ -23,32 +23,26 @@ export default function SmartCart({ cart = [], setCart }) {
   }
 
   // ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
- const message = encodeURIComponent(
-  `Hi Discount BAZARR 👋\n\nI want to order:\n\n` +
-    safeCart
-      .map(
-        (i) =>
-          `🛒 ${i.name}\n💰 ₹${i.discount_price}\n🔗 ${window.location.origin}/?item=${i.id}`
-      )
-      .join("\n\n") +
-    `\n----------------\nTotal: ₹${total}\n\nPlease confirm availability.`
+ const baseUrl =
+  window.location.hostname === "localhost"
+    ? "https://discountbazarr.com"
+    : window.location.origin;
+
+const message =
+  `Hi Discount BAZARR 👋%0A%0A` +
+  safeCart
+    .map(
+      (i) =>
+        `${i.name} - ₹${i.discount_price}%0A${baseUrl}/?item=${i.id}`
+    )
+    .join("%0A%0A") +
+  `%0A----------------%0A` +
+  `Total: ₹${total}%0A%0A` +
+  `Please confirm availability.`;
 );
 
   return (
-    <div
-      className="smart-cart"
-      style={{
-        position: "fixed",
-        right: "16px",
-        bottom: "90px", // ✅ DB BOT overlap avoid
-        width: "260px",
-        background: "#fff",
-        borderRadius: "14px",
-        padding: "12px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
-        zIndex: 9998,
-      }}
-    >
+    <div className="smart-cart-container">
       {/* 🔷 HEADER */}
       <div
         className="cart-header"

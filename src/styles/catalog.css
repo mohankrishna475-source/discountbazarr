@@ -270,7 +270,7 @@
 }
 
 /* 🔷 SMART CART */
-.smart-cart {
+.smart-cart-container {
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -356,4 +356,24 @@
   .product-grid {
     grid-template-columns: repeat(1, 1fr);
   }
+}
+/* 📱 MOBILE CATEGORY SCROLL */
+@media (max-width: 768px) {
+  .category-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .category-card {
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+}
+.tagline-single {
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 14px;
 }
