@@ -22,22 +22,22 @@ export default function SmartCart({ cart = [], setCart }) {
     setCart(newCart);
   }
 
-  // ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
- const baseUrl =
+// ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
+const baseUrl =
   window.location.hostname === "localhost"
     ? "https://discountbazarr.com"
     : window.location.origin;
 
 const message =
-  `Hi Discount BAZARR 👋%0A%0A` +
+  `Hi Discount BAZARR 👋\n` +
   safeCart
     .map(
       (i) =>
-        `${i.name} - ₹${i.discount_price}%0A${baseUrl}/?item=${i.id}`
+        `${i.name} - ₹${i.discount_price}\n${baseUrl}/?item=${i.id}`
     )
-    .join("%0A%0A") +
-  `%0A----------------%0A` +
-  `Total: ₹${total}%0A%0A` +
+    .join("\n") +
+  `\n----------------\n` +
+  `Total: ₹${total}\n` +
   `Please confirm availability.`;
 );
 
