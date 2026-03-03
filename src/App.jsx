@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
 import Catalog from "./pages/Catalog";
@@ -9,17 +9,49 @@ import DBChatbot from "./chatbot/DBChatbot";
 import PhoneLogin from "./components/PhoneLogin";
 import Navbar from "./components/Navbar";
 import "./styles/catalog.css";
+import AllCategories from "./pages/AllCategories";
+
+/* 🔷 MOBILE BOTTOM NAV COMPONENT */
+function MobileBottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className="mobile-bottom-nav">
+      <div
+        className={location.pathname === "/" ? "active" : ""}
+        onClick={() => navigate("/")}
+      >
+        🏠
+        <span>Home</span>
+      </div>
+
+      <div
+        className={location.pathname === "/hot-deals" ? "active" : ""}
+        onClick={() => navigate("/hot-deals")}
+      >
+        🔥
+        <span>Hot Deals</span>
+      </div>
+
+      <div
+        className={location.pathname === "/design-lab" ? "active" : ""}
+        onClick={() => navigate("/design-lab")}
+      >
+        🎨
+        <span>Design Lab</span>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // 🔷 GLOBAL SMART CART
   const [cart, setCart] = useState([]);
 
-  /* 🔄 LOAD USER */
   useEffect(() => {
     const savedPhone = localStorage.getItem("db_user_phone");
     if (savedPhone) {
@@ -27,7 +59,6 @@ function App() {
     }
   }, []);
 
-  /* 📦 FETCH CART COUNT */
   const fetchCartCount = async (phone) => {
     if (!phone) return;
 
@@ -39,7 +70,6 @@ function App() {
     setCartCount(count || 0);
   };
 
-  /* 🔄 UPDATE COUNT WHEN USER CHANGES */
   useEffect(() => {
     if (user?.phone) {
       fetchCartCount(user.phone);
@@ -48,7 +78,6 @@ function App() {
     }
   }, [user]);
 
-  /* ➕ ADD TO CART */
   const addToCart = async (product) => {
     if (!user?.phone) {
       setShowLogin(true);
@@ -82,7 +111,6 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* 🔷 NAVBAR */}
       <Navbar
         user={user}
         cartCount={cartCount}
@@ -91,7 +119,6 @@ function App() {
         setSearchTerm={setSearchTerm}
       />
 
-      {/* 🔐 LOGIN POPUP */}
       {showLogin && !user && (
         <div className="login-popup">
           <PhoneLogin
@@ -106,8 +133,8 @@ function App() {
         </div>
       )}
 
-      {/* 🌐 ROUTES */}
       <Routes>
+        {/* 🏠 HOME */}
         <Route
           path="/"
           element={
@@ -116,15 +143,60 @@ function App() {
               searchTerm={searchTerm}
               cart={cart}
               setCart={setCart}
+              mode="home"
             />
           }
         />
+
+        {/* 🔥 HOT DEALS */}
+        <Route
+          path="/hot-deals"
+          element={
+            <Catalog
+              addToCart={addToCart}
+              searchTerm={searchTerm}
+              cart={cart}
+              setCart={setCart}
+              mode="hot"
+            />
+          }
+        />
+
+        {/* 🎨 DESIGN LAB */}
+        <Route
+          path="/design-lab"
+          element={
+            <Catalog
+              addToCart={addToCart}
+              searchTerm={searchTerm}
+              cart={cart}
+              setCart={setCart}
+              mode="design"
+            />
+          }
+        />
+
+        {/* CATEGORY PRODUCTS */}
+        <Route
+          path="/category/:slug"
+          element={
+            <Catalog
+              addToCart={addToCart}
+              searchTerm={searchTerm}
+              cart={cart}
+              setCart={setCart}
+              mode="home"
+            />
+          }
+        />
+
         <Route path="/cart" element={<Cart user={user} />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/all-categories" element={<AllCategories />} />
       </Routes>
 
-      {/* 🤖 DB BOT */}
+      <MobileBottomNav />
       <DBChatbot />
     </BrowserRouter>
   );

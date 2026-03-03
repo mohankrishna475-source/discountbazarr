@@ -48,32 +48,32 @@ export default function DBChatbot() {
     else if (step === "custom") setStep("price");
   };
 
-  // 🔥 REDIRECT WITH ITEM HIGHLIGHT
   const goToProduct = (item) => {
-    const subcategorySlug = item.subcategory_slug;
-    const itemId = item.id;
-
     setOpen(false);
-
     window.location.assign(
-      `/?tab=deals&cat=${subcategorySlug}&item=${itemId}`
+      `/?tab=deals&cat=${item.subcategory_slug}&item=${item.id}`
     );
   };
 
   return (
     <>
-      {/* 🔷 FLOATING BUTTON (ABOVE SMART CART) */}
-      <div style={floatingStyle}>
-        <div onClick={() => setOpen(!open)} style={circleStyle}>
-          DB
-        </div>
-        <div style={{ fontSize: "12px", fontWeight: "bold" }}>DB Bot</div>
+      {/* 🔥 TOP RIGHT FLOATING BUTTON */}
+      <div style={topButtonStyle} onClick={() => setOpen(!open)}>
+        DB
       </div>
 
-      {/* 🔷 CHAT BOX */}
+      {/* 🔥 CHAT POPUP */}
       {open && (
         <div style={chatBoxStyle}>
-          <div style={headerStyle}>Discount BAZARR Assistant</div>
+          <div style={headerStyle}>
+            Discount BAZARR Assistant
+            <span
+              style={closeStyle}
+              onClick={() => setOpen(false)}
+            >
+              ✕
+            </span>
+          </div>
 
           <div style={bodyStyle}>
             {step !== "price" && (
@@ -82,7 +82,6 @@ export default function DBChatbot() {
               </button>
             )}
 
-            {/* 🔹 STEP 1 – PRICE */}
             {step === "price" && (
               <>
                 <div style={msgStyle}>👋 Select your price range</div>
@@ -106,7 +105,6 @@ export default function DBChatbot() {
               </>
             )}
 
-            {/* 🔹 CUSTOM PRICE */}
             {step === "custom" && (
               <>
                 <div style={msgStyle}>Enter max price</div>
@@ -131,7 +129,6 @@ export default function DBChatbot() {
               </>
             )}
 
-            {/* 🔹 CATEGORY */}
             {step === "category" && (
               <>
                 <div style={msgStyle}>📦 Select category</div>
@@ -148,12 +145,11 @@ export default function DBChatbot() {
               </>
             )}
 
-            {/* 🔹 RESULTS */}
             {step === "results" && (
               <>
                 <div style={msgStyle}>🛍️ Items found</div>
 
-                {loading && <div style={typingStyle}>Typing...</div>}
+                {loading && <div style={typingStyle}>Loading...</div>}
 
                 {items.map((item) => (
                   <div
@@ -177,17 +173,13 @@ export default function DBChatbot() {
   );
 }
 
-/* 🔷 FLOATING POSITION – ABOVE SMART CART */
-const floatingStyle = {
+/* 🔥 TOP RIGHT BUTTON */
+const topButtonStyle = {
   position: "fixed",
-  left: "16px",
-  bottom: "20px",
-  zIndex: 10000,
-  textAlign: "center",
-};
-const circleStyle = {
-  width: "60px",
-  height: "60px",
+  top: "90px",
+  right: "16px",
+  width: "44px",
+  height: "44px",
   borderRadius: "50%",
   backgroundColor: "#facc15",
   display: "flex",
@@ -195,25 +187,33 @@ const circleStyle = {
   justifyContent: "center",
   fontWeight: "bold",
   cursor: "pointer",
-  boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+  zIndex: 9999,
 };
 
+/* CHAT BOX */
 const chatBoxStyle = {
   position: "fixed",
-  left: "16px",
-  bottom: "100px",
+  top: "150px",
+  right: "16px",
   width: "280px",
   backgroundColor: "#fff",
   borderRadius: "12px",
   boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
   overflow: "hidden",
-  zIndex: 10000,
+  zIndex: 9999,
 };
 
 const headerStyle = {
   backgroundColor: "#facc15",
   padding: "10px",
   fontWeight: "bold",
+  display: "flex",
+  justifyContent: "space-between",
+};
+
+const closeStyle = {
+  cursor: "pointer",
 };
 
 const bodyStyle = {

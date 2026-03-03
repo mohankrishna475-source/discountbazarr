@@ -11,8 +11,8 @@ export default function Navbar({
 
   return (
     <>
-      {/* 🔷 DESKTOP NAVBAR (OLD STYLE WILL SHOW) */}
-      <div className="navbar">
+      {/* ================= DESKTOP NAVBAR (UNCHANGED) ================= */}
+      <div className="navbar desktop-only">
         <div className="nav-left">
           <img src="/logo.png" alt="logo" className="db-logo" />
           <div className="nav-title">Discount BAZARR</div>
@@ -44,40 +44,27 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* 🔷 MOBILE NAVBAR */}
+      {/* ================= MOBILE NAVBAR ================= */}
       <div className="mobile-navbar">
-        <div className="nav-top">
-          <img src="/logo.png" alt="logo" className="nav-logo" />
+        <div className="mobile-top">
+          <div className="mobile-brand">Discount Bazarr</div>
 
-          <div className="nav-brand">Discount BAZARR</div>
-
-          {user ? (
-            <button className="nav-login-btn">Hi</button>
-          ) : (
-            <button
-              className="nav-login-btn"
-              onClick={() => setShowLogin(true)}
-            >
-              Login
-            </button>
-          )}
+          <div className="mobile-icons">
+            <span>🔔</span>
+            <span>❤️</span>
+            <span onClick={() => navigate("/cart")}>
+              🛒 <span className="badge">{cartCount}</span>
+            </span>
+          </div>
         </div>
 
-        <div className="nav-search-row">
+        <div className="mobile-search">
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="nav-search"
           />
-        </div>
-
-        <div
-          className="nav-cart-row"
-          onClick={() => navigate("/cart")}
-        >
-          🛒 My Cart <span className="nav-cart-badge">{cartCount}</span>
         </div>
       </div>
     </>

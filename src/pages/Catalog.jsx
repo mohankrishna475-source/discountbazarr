@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabase";
 import "../styles/catalog.css";
 import SmartCart from "../components/SmartCart";
@@ -8,41 +8,25 @@ export default function Catalog({
   addToCart,
   searchTerm,
   cart,
-  setCart
+  setCart,
+  mode = "home"
 }) {
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { slug } = useParams();
 
-  const [tab, setTab] = useState("deals");
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [products, setProducts] = useState([]);
-  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [wishlist, setWishlist] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(1);
 
-  /* 🔹 READ TAB FROM URL */
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    const catParam = searchParams.get("cat");
-    const itemParam = searchParams.get("item");
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev === 6 ? 1 : prev + 1));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-    if (tabParam) setTab(tabParam);
-    if (catParam) setActiveCategory(catParam);
-    if (itemParam) setSelectedItemId(itemParam);
-  }, [searchParams]);
-
-  /* 🔹 CATEGORY ICONS */
-  const categoryIcons = {
-  "Kitchen Appliances": "🍽️",
-  "Premium Footwear": "🥾",
-  "Household": "🛋️",
-  "Fashion Wear": "🧥",
-  "Small Appliances": "🧯",
-  "Luggage & Bags": "🎒",
-  "Home Tools": "🧰",
-  "Sports & Fitness": "🏃",
-  "Stationary Items": "🖊️",
-};
-
-  /* 🔹 LOAD CATEGORIES */
   useEffect(() => {
     const loadCategories = async () => {
       const { data } = await supabase
@@ -53,11 +37,17 @@ export default function Catalog({
 
       setCategories(data || []);
     };
-
     loadCategories();
   }, []);
 
-  /* 🔹 LOAD PRODUCTS */
+  useEffect(() => {
+    if (slug) {
+      setActiveCategory(slug);
+    } else {
+      setActiveCategory(null);
+    }
+  }, [slug]);
+
   useEffect(() => {
     if (!activeCategory) return;
 
@@ -73,160 +63,176 @@ export default function Catalog({
     loadProducts();
   }, [activeCategory]);
 
-  /* 🔹 SCROLL TO SELECTED ITEM */
-  useEffect(() => {
-    if (!selectedItemId) return;
-
-    const el = document.getElementById(`product-${selectedItemId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.style.outline = "3px solid #facc15";
-      el.style.borderRadius = "12px";
-    }
-  }, [products, selectedItemId]);
-
-  /* 🔍 SEARCH FILTER */
   const filteredProducts = products.filter((item) => {
     if (!searchTerm) return true;
     return item.title?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const orderOnWhatsApp = (product) => {
+    const message = `Hi Discount Bazarr,%0A I want to order:%0A${product.title}%0APrice: ₹${product.db_price}`;
+    window.open(`https://wa.me/918328364086?text=${message}`, "_blank");
+  };
+
+  const toggleWishlist = (product) => {
+    const exists = wishlist.find((i) => i.id === product.id);
+    if (exists) {
+      setWishlist(wishlist.filter((i) => i.id !== product.id));
+    } else {
+      setWishlist([...wishlist, product]);
+    }
+  };
+
   return (
     <div className="catalog-page">
-      {/* 🔷 HERO */}
+
+      {/* HERO */}
       <div className="hero">
         <h1 className="brand-title">Discount Bazarr</h1>
 
-        <div className="tagline-single">
-  Come with Trust • Buy with Confidence • Move with Happiness
-</div>
+        <div className="scrolling-brand">
+          <div className="brand-slide brand-blue">Discount Bazarr</div>
+          <div className="brand-slide brand-yellow">Discount Bazarr</div>
+          <div className="brand-slide brand-green">Discount Bazarr</div>
+        </div>
 
-        {/* 🔷 TABS */}
-        <div className="fancy-tabs">
-          <button
-            className={tab === "deals" ? "active" : ""}
-            onClick={() => {
-              setTab("deals");
-              setActiveCategory(null);
-            }}
-          >
-            Daily Deals
-          </button>
-
-          <button
-            className={tab === "hot" ? "active" : ""}
-            onClick={() => {
-              setTab("hot");
-              setActiveCategory(null);
-            }}
-          >
-            Hot Deals
-          </button>
-
-          <button
-            className={tab === "design" ? "active" : ""}
-            onClick={() => setTab("design")}
-          >
-            Design Lab
-          </button>
+        <div className="mobile-tagline">
+          <div className="tag-line-row">
+            <span className="tag-blue">• Come with Trust</span>
+            <span className="tag-yellow">• Buy with Confidence</span>
+          </div>
+          <div className="tag-line-row">
+            <span className="tag-green">• Move with Happiness</span>
+          </div>
         </div>
       </div>
 
-      {/* 🔷 CATEGORY GRID */}
-      {tab === "deals" && !activeCategory && (
-        <div className="category-grid">
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="category-card"
-              onClick={() => setActiveCategory(cat.slug)}
-            >
-              <div className="cat-icon">
-                {categoryIcons[cat.name] || "🛒"}
+      {/* HOME */}
+      {mode === "home" && !activeCategory && (
+        <>
+          <div className="mobile-category-header">
+            <h2>Shop By Categories</h2>
+            <span onClick={() => navigate("/all-categories")}>
+              See All
+            </span>
+          </div>
+
+          <div className="category-grid">
+            {categories.slice(0, 6).map((cat) => (
+              <div
+                key={cat.id}
+                className="category-card"
+                onClick={() => navigate(`/category/${cat.slug}`)}
+              >
+                <div className="cat-icon">
+                  {cat.name === "Kitchen Appliances" && "🍲"}
+                  {cat.name === "Premium Footwear" && "👞"}
+                  {cat.name === "Household" && "🪑"}
+                  {cat.name === "Fashion Wear" && "👗"}
+                  {cat.name === "Small Appliances" && "🔋"}
+                  {cat.name === "Luggage & Bags" && "🧳"}
+                </div>
+                <div className="category-name">{cat.name}</div>
               </div>
-              <div className="category-name">{cat.name}</div>
-              <div className="stock">Stock Loaded</div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: "20px" }}>
+            <div className="mobile-slider">
+              <img
+                src={`/slides/slide${currentSlide}.jpg`}
+                alt={`slide-${currentSlide}`}
+                className="single-slide"
+              />
             </div>
-          ))}
+          </div>
+        </>
+      )}
+
+      {/* HOT DEALS */}
+      {mode === "hot" && (
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          <h2>🔥 Hot Deals</h2>
+          <p>Exciting offers coming soon...</p>
         </div>
       )}
 
-      {/* 🔷 PRODUCTS GRID */}
+      {/* DESIGN LAB */}
+      {mode === "design" && (
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          <h2>🎨 Design Lab</h2>
+          <p>Custom design services launching soon...</p>
+        </div>
+      )}
+
+      {/* PRODUCTS */}
       {activeCategory && (
-        <div className="product-grid">
-          {filteredProducts.length === 0 && (
-            <div style={{ padding: "20px", fontWeight: "bold" }}>
-              No products found
-            </div>
-          )}
+        <>
+          <div className="mobile-back-btn">
+            <button onClick={() => navigate("/")}>
+              ← Back
+            </button>
+          </div>
 
-          {filteredProducts.map((p) => (
-            <div className="product-card" key={p.id} id={`product-${p.id}`}>
-              <img src={p.image_url || "/no-image.png"} alt={p.title} />
+          <div className="product-grid">
+            {filteredProducts.map((p) => (
+              <div className="product-card" key={p.id}>
+                <div className="product-top-icons">
+                  <span
+                    className={`wish-icon ${
+                      wishlist.find((i) => i.id === p.id) ? "active" : ""
+                    }`}
+                    onClick={() => toggleWishlist(p)}
+                  >
+                    ♥
+                  </span>
 
-              <h3 className="title">{p.title}</h3>
+                  <span
+                    className="mini-cart-icon"
+                    onClick={() => addToCart(p)}
+                  >
+                    🛒
+                  </span>
+                </div>
 
-              <div className="price-box">
-                {p.mrp && <div className="mrp">₹{p.mrp}</div>}
+                <img
+                  src={p.image_url || "/no-image.png"}
+                  alt={p.title}
+                />
 
-                {p.online_price && (
-                  <div className="online">Online ₹{p.online_price}</div>
-                )}
+                <h3 className="title">{p.title}</h3>
 
                 <div className="db-badge">
                   <div className="db-label">DB PRICE</div>
                   <div className="db-value">₹{p.db_price}</div>
                 </div>
+
+                <button
+                  className="cart-btn"
+                  onClick={() => addToCart(p)}
+                >
+                  Add to Cart
+                </button>
+
+                <button
+                  className="whatsapp-btn"
+                  onClick={() => orderOnWhatsApp(p)}
+                >
+                  Order on WhatsApp
+                </button>
               </div>
-
-              {p.online_price && p.db_price && (
-                <div className="discount">
-                  {Math.round(
-                    ((p.online_price - p.db_price) / p.online_price) * 100
-                  )}
-                  % OFF
-                </div>
-              )}
-
-              {/* 🔹 WHATSAPP BUTTON */}
-              <button
-                className="whatsapp-btn"
-                onClick={() =>
-                  window.open(
-                    `https://wa.me/918328364086?text=I want ${p.title}`,
-                    "_blank"
-                  )
-                }
-              >
-                Order on WhatsApp
-              </button>
-
-              {/* 🔹 ADD TO CART */}
-              <button
-  className="cart-btn"
-  onClick={() => {
-    // 🔷 SMART CART
-    setCart((prev) => [
-      ...prev,
-      {
-        id: p.id,
-        name: p.title,
-        discount_price: p.db_price,
-      },
-    ]);
-
-    // 🔷 MY CART (SUPABASE)
-    addToCart(p);
-  }}
->
-  Add to Cart
-</button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* 🔷 SMART CART */}
+      {/* 🔥 NEW DB FLOATING BUTTON */}
+      <div
+        className="db-floating-btn"
+        onClick={() => navigate("/")}
+      >
+        DB
+      </div>
+
       <SmartCart cart={cart} setCart={setCart} />
     </div>
   );

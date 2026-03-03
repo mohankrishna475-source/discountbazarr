@@ -23,6 +23,12 @@ export default function SmartCart({ cart = [], setCart }) {
   }
 
 // ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
+
+const baseUrl =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5173"
+    : window.location.origin;
+
 const message =
   "Hi Discount BAZARR %0A%0A" +
   safeCart
@@ -38,7 +44,7 @@ const message =
       );
     })
     .join("%0A") +
-  "%0A%0ATotal: ₹" +
+  "%0ATotal: ₹" +
   total +
   "%0APlease confirm availability.";
 
