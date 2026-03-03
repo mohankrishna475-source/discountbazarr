@@ -23,23 +23,24 @@ export default function SmartCart({ cart = [], setCart }) {
   }
 
 // ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
-const baseUrl =
-  window.location.hostname === "localhost"
-    ? "https://discountbazarr.com"
-    : window.location.origin;
-
 const message =
-  `Hi Discount BAZARR 👋\n` +
+  "Hi Discount BAZARR %0A%0A" +
   safeCart
-    .map(
-      (i) =>
-        `${i.name} - ₹${i.discount_price}\n${baseUrl}/?item=${i.id}`
-    )
-    .join("\n") +
-  `\n----------------\n` +
-  `Total: ₹${total}\n` +
-  `Please confirm availability.`;
-);
+    .map(function (i) {
+      return (
+        i.name +
+        " - ₹" +
+        i.discount_price +
+        "%0A" +
+        baseUrl +
+        "/?item=" +
+        i.id
+      );
+    })
+    .join("%0A") +
+  "%0A%0ATotal: ₹" +
+  total +
+  "%0APlease confirm availability.";
 
   return (
     <div className="smart-cart-container">
