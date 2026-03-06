@@ -39,8 +39,10 @@ export default function AllCategories() {
           <div
             key={cat.id}
             className="category-card"
-            onClick={() => navigate(`/category/${cat.slug}`)}   // 🔥 IMPORTANT FIX
+            onClick={() => navigate(`/category/${cat.slug}`)}
           >
+
+            {/* 🔥 CATEGORY EMOJI ICONS */}
             <div className="cat-icon">
               {cat.name === "Kitchen Appliances" && "🍲"}
               {cat.name === "Premium Footwear" && "👞"}
@@ -48,12 +50,13 @@ export default function AllCategories() {
               {cat.name === "Fashion Wear" && "👗"}
               {cat.name === "Small Appliances" && "🔋"}
               {cat.name === "Luggage & Bags" && "🧳"}
-              {cat.name === "Home Tools" && "🔧"}
+              {cat.name === "Home Tools" && "🛠"}
               {cat.name === "Sports & Fitness" && "🏋️"}
-              {cat.name === "Stationary Items" && "📒"}
+              {cat.name === "Stationary Items" && "📚"}
             </div>
 
             <div className="category-name">{cat.name}</div>
+
           </div>
         ))}
       </div>

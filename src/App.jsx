@@ -58,17 +58,22 @@ function App() {
       setUser({ phone: savedPhone });
     }
   }, []);
+const fetchCartCount = async (phone) => {
+if (!phone) return;
 
-  const fetchCartCount = async (phone) => {
-    if (!phone) return;
+const { count, error } = await supabase
+.from("cart_items")
+.select("*", { count: "exact", head: true })
+.eq("user_phone", phone);
 
-    const { count } = await supabase
-      .from("cart_items")
-      .select("*", { count: "exact", head: true })
-      .eq("user_phone", phone);
+if (error) {
+console.error("Cart count error:", error);
+return;
+}
 
-    setCartCount(count || 0);
-  };
+setCartCount(count || 0);
+};
+
 
   useEffect(() => {
     if (user?.phone) {
@@ -134,7 +139,8 @@ function App() {
       )}
 
       <Routes>
-        {/* 🏠 HOME */}
+
+        {/* 🏠 HOME PAGE */}
         <Route
           path="/"
           element={
@@ -148,7 +154,7 @@ function App() {
           }
         />
 
-        {/* 🔥 HOT DEALS */}
+        {/* 🔥 HOT DEALS PAGE */}
         <Route
           path="/hot-deals"
           element={
@@ -162,7 +168,7 @@ function App() {
           }
         />
 
-        {/* 🎨 DESIGN LAB */}
+        {/* 🎨 DESIGN LAB PAGE */}
         <Route
           path="/design-lab"
           element={
@@ -176,7 +182,7 @@ function App() {
           }
         />
 
-        {/* CATEGORY PRODUCTS */}
+        {/* CATEGORY PRODUCTS PAGE */}
         <Route
           path="/category/:slug"
           element={
@@ -194,6 +200,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/all-categories" element={<AllCategories />} />
+
       </Routes>
 
       <MobileBottomNav />
