@@ -11,6 +11,9 @@ import Navbar from "./components/Navbar";
 import "./styles/catalog.css";
 import AllCategories from "./pages/AllCategories";
 
+/* ✅ NEW PRODUCT PAGE IMPORT */
+import ProductPage from "./pages/ProductPage";
+
 /* 🔷 MOBILE BOTTOM NAV COMPONENT */
 function MobileBottomNav() {
   const navigate = useNavigate();
@@ -58,22 +61,22 @@ function App() {
       setUser({ phone: savedPhone });
     }
   }, []);
-const fetchCartCount = async (phone) => {
-if (!phone) return;
 
-const { count, error } = await supabase
-.from("cart_items")
-.select("*", { count: "exact", head: true })
-.eq("user_phone", phone);
+  const fetchCartCount = async (phone) => {
+    if (!phone) return;
 
-if (error) {
-console.error("Cart count error:", error);
-return;
-}
+    const { count, error } = await supabase
+      .from("cart_items")
+      .select("*", { count: "exact", head: true })
+      .eq("user_phone", phone);
 
-setCartCount(count || 0);
-};
+    if (error) {
+      console.error("Cart count error:", error);
+      return;
+    }
 
+    setCartCount(count || 0);
+  };
 
   useEffect(() => {
     if (user?.phone) {
@@ -192,6 +195,17 @@ setCartCount(count || 0);
               cart={cart}
               setCart={setCart}
               mode="home"
+            />
+          }
+        />
+
+        {/* ✅ PRODUCT DETAIL PAGE */}
+        <Route
+          path="/product/:id"
+          element={
+            <ProductPage
+              addToCart={addToCart}
+              user={user}
             />
           }
         />
