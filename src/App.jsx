@@ -58,11 +58,6 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState([]);
 
-  /* ✅ AUTO FETCH RUN */
-  useEffect(() => {
-    autoFetchProducts(250); 
-  }, []);
-
   useEffect(() => {
     const savedPhone = localStorage.getItem("db_user_phone");
     if (savedPhone) {
