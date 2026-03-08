@@ -4,18 +4,14 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.SERP_API_KEY;
 
+  const url = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&tbm=isch&api_key=${apiKey}`;
+
   try {
 
-    const response = await fetch(
-      `https://serpapi.com/search.json?engine=google_images&q=${query}&api_key=${apiKey}`
-    );
-
+    const response = await fetch(url);
     const data = await response.json();
 
-    const images =
-      data.images_results?.slice(0, 4).map(img => img.original) || [];
-
-    res.status(200).json({ images });
+    res.status(200).json(data);
 
   } catch (error) {
 
