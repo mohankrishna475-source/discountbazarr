@@ -1,36 +1,29 @@
-const https = require("https");
+const axios = require("axios");
 
 module.exports = async function (req, res) {
 
-  const query = req.query.query || "nike";
-  const apiKey = process.env.SERP_API_KEY;
+  try {
 
-  const url =
-    "https://serpapi.com/search.json?q=" +
-    encodeURIComponent(query) +
-    "&tbm=isch&api_key=" +
-    apiKey;
+    const query = req.query.query || "nike";
+    const apiKey = process.env.SERP_API_KEY;
 
-  https.get(url, (apiRes) => {
+    const url =
+      "https://serpapi.com/search.json?q=" +
+      encodeURIComponent(query) +
+      "&tbm=isch&api_key=" +
+      apiKey;
 
-    let data = "";
+    const response = await axios.get(url);
 
-    apiRes.on("data", (chunk) => {
-      data += chunk;
+    return res.status(200).json(response.data);
+
+  } catch (error) {
+
+    return res.status(500).json({
+      error: "SerpAPI fetch failed",
+      message: error.message
     });
 
-    apiRes.on("end", () => {
-      const json = JSON.parse(data);
-      res.status(200).json(json);
-    });
-
-  }).on("error", (err) => {
-
-    res.status(500).json({
-      error: "SerpAPI request failed",
-      message: err.message
-    });
-
-  });
+  }
 
 };
