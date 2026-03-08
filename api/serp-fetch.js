@@ -1,22 +1,33 @@
+const https = require("https");
+
 module.exports = async function (req, res) {
 
   const query = req.query.query;
-
   const apiKey = process.env.SERP_API_KEY;
 
   const url = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&tbm=isch&api_key=${apiKey}`;
 
-  try {
+  https.get(url, (apiRes) => {
 
-    const response = await fetch(url);
-    const data = await response.json();
+    let data = "";
 
-    res.status(200).json(data);
+    apiRes.on("data", (chunk) => {
+      data += chunk;
+    });
 
-  } catch (error) {
+    apiRes.on("end", () => {
+      try {
+        const json = JSON.parse(data);
+        res.status(200).json(json);
+      } catch (err) {
+        res.status(500).json({ error: "JSON parse error" });
+      }
+    });
 
-    res.status(500).json({ error: "SerpAPI fetch failed" });
+  }).on("error", (err) => {
 
-  }
+    res.status(500).json({ error: "SerpAPI request failed" });
+
+  });
 
 };
