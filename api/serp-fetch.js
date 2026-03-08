@@ -1,35 +1,36 @@
+const https = require("https");
+
 module.exports = async function (req, res) {
-  try {
 
-    const query = req.query.query || "nike";
+  const query = req.query.query || "nike";
+  const apiKey = process.env.SERP_API_KEY;
 
-    const apiKey = process.env.SERP_API_KEY;
+  const url =
+    "https://serpapi.com/search.json?q=" +
+    encodeURIComponent(query) +
+    "&tbm=isch&api_key=" +
+    apiKey;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "SERP_API_KEY not found" });
-    }
+  https.get(url, (apiRes) => {
 
-    const url =
-      "https://serpapi.com/search.json?q=" +
-      encodeURIComponent(query) +
-      "&tbm=isch&api_key=" +
-      apiKey;
+    let data = "";
 
-    const response = await fetch(url);
-
-    const data = await response.json();
-
-    return res.status(200).json({
-      status: "success",
-      test: "function working",
-      results: data.images_results?.slice(0,3)
+    apiRes.on("data", (chunk) => {
+      data += chunk;
     });
 
-  } catch (err) {
-    return res.status(500).json({
-      error: "FUNCTION CRASH",
-      message: err.message,
-      stack: err.stack
+    apiRes.on("end", () => {
+      const json = JSON.parse(data);
+      res.status(200).json(json);
     });
-  }
+
+  }).on("error", (err) => {
+
+    res.status(500).json({
+      error: "SerpAPI request failed",
+      message: err.message
+    });
+
+  });
+
 };
