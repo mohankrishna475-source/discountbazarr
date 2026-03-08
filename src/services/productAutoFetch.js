@@ -1,13 +1,11 @@
 import { supabase } from "../lib/supabaseClient";
 
-const SERP_KEY = import.meta.env.VITE_SERP_API_KEY;
-
 export async function autoFetchProducts(limit = 250) {
 
   const { data: products } = await supabase
     .from("catalog_items")
     .select("*")
-    .is("description", null)
+    .is("image_url", null)
     .limit(limit);
 
   if (!products) return;
@@ -19,19 +17,19 @@ export async function autoFetchProducts(limit = 250) {
     try {
 
       const res = await fetch(
-        `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&tbm=isch&api_key=${SERP_KEY}`
+        `/api/serp-fetch?query=${encodeURIComponent(query)}`
       );
 
-      const json = await res.json();
+      const data = await res.json();
 
-      const images = json.images_results || [];
+      const images = data.images || [];
 
-      const image1 = images[0]?.original || null;
-      const image2 = images[1]?.original || null;
-      const image3 = images[2]?.original || null;
-      const image4 = images[3]?.original || null;
+      const image1 = images[0] || null;
+      const image2 = images[1] || null;
+      const image3 = images[2] || null;
+      const image4 = images[3] || null;
 
-      const description = `${product.title} by ${product.brand}. High quality product available at DiscountBazarr.`;
+      const description = `${product.title} by ${product.brand}. High quality product available at DiscountBazarr with best price and trusted delivery.`;
 
       await supabase
         .from("catalog_items")
@@ -46,9 +44,9 @@ export async function autoFetchProducts(limit = 250) {
 
       console.log("Updated:", product.title);
 
-    } catch (err) {
+    } catch (error) {
 
-      console.log("Error fetching", product.title);
+      console.error("Error fetching", product.title);
 
     }
 
