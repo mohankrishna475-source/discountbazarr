@@ -23,6 +23,30 @@ export default function AllCategories() {
 
   return (
     <div className="catalog-page">
+<div className="hero">
+
+<h1 className="brand-title">Discount Bazarr</h1>
+
+<div className="scrolling-brand">
+<div className="brand-slide brand-blue">Discount Bazarr</div>
+<div className="brand-slide brand-yellow">Discount Bazarr</div>
+<div className="brand-slide brand-green">Discount Bazarr</div>
+</div>
+
+<div className="mobile-tagline">
+
+<div className="tag-line-row">
+<span className="tag-blue">• Come with Trust</span>
+<span className="tag-yellow">• Buy with Confidence</span>
+</div>
+
+<div className="tag-line-row">
+<span className="tag-green">• Move with Happiness</span>
+</div>
+
+</div>
+
+</div>
 
       <div className="mobile-back-btn">
         <button onClick={() => navigate("/")}>

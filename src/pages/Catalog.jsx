@@ -4,6 +4,7 @@ import { supabase } from "../supabase";
 import "../styles/catalog.css";
 import SmartCart from "../components/SmartCart";
 
+
 export default function Catalog({
   addToCart,
   searchTerm,
@@ -142,8 +143,9 @@ export default function Catalog({
   };
 
   return (
-    <div className="catalog-page">
+  <div className="catalog-page">
 
+ 
       {/* HERO */}
 
       <div className="hero">
@@ -170,7 +172,35 @@ export default function Catalog({
         </div>
 
       </div>
+   {/* BACK BUTTON */}
+{activeCategory && (
+  <div className="back-button" onClick={() => navigate(-1)}>
+    ⬅ Back
+  </div>
+)}
 
+{/* BREADCRUMB */}
+
+{activeCategory && (
+
+  <div className="breadcrumb">
+
+    <span
+      className="crumb-link"
+      onClick={() => navigate("/")}
+    >
+      Home
+    </span>
+
+    <span className="crumb-sep">›</span>
+
+    <span className="crumb-current">
+      {activeCategory.replace("-", " ")}
+    </span>
+
+  </div>
+
+)}
       {/* HOME PAGE */}
 
       {mode === "home" && !activeCategory && (
@@ -204,16 +234,16 @@ export default function Catalog({
                 onClick={() => navigate(`/category/${cat.slug}`)}
               >
 
-                <div className="cat-icon">
+              <div className="cat-icon">
 
-                  {cat.name === "Kitchen Appliances" && "🍲"}
-                  {cat.name === "Premium Footwear" && "👞"}
-                  {cat.name === "Household" && "🪑"}
-                  {cat.name === "Fashion Wear" && "👗"}
-                  {cat.name === "Small Appliances" && "🔋"}
-                  {cat.name === "Luggage & Bags" && "🧳"}
+{cat.name === "Kitchen Appliances" && "🍲"}
+{cat.name === "Premium Footwear" && "👞"}
+{cat.name === "Household" && "🪑"}
+{cat.name === "Fashion Wear" && "👗"}
+{cat.name === "Small Appliances" && "🔋"}
+{cat.name === "Luggage & Bags" && "🧳"}
 
-                </div>
+</div>
 
                 <div className="category-name">{cat.name}</div>
 
@@ -337,15 +367,24 @@ export default function Catalog({
 
               <div className="product-card" key={p.id}>
 
-                <img
-                  src={p.image_url || "/no-image.png"}
-                  alt={p.title}
-                  onClick={() => {
-                    increaseViewCount(p);
-                    navigate(`/product/${p.id}`);
-                  }}
-                />
+                <div style={{position:"relative"}}>
 
+{p.discount_percent > 0 && (
+<div className="discount-tag">
+{p.discount_percent}% OFF
+</div>
+)}
+
+<img
+ src={p.image_url || "/no-image.png"}
+ alt={p.title}
+ onClick={() => {
+   increaseViewCount(p);
+   navigate(`/product/${p.id}`);
+ }}
+/>
+
+</div>
                 <h3>{p.title}</h3>
 
                 <div style={{ textDecoration: "line-through", color: "#999" }}>

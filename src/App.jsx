@@ -51,6 +51,40 @@ function MobileBottomNav() {
   );
 }
 
+/* 🎉 CONFETTI COMPONENT (NEW ADDITION) */
+function ConfettiEffect() {
+  useEffect(() => {
+    const container = document.createElement("div");
+    container.className = "confetti-container";
+    document.body.appendChild(container);
+
+    const colors = ["#ff3cac", "#ff8a00", "#ffe259", "#ff5f6d", "#36d1dc"];
+
+    const createConfetti = () => {
+      const confetti = document.createElement("div");
+      confetti.className = "confetti-piece";
+      confetti.style.left = Math.random() * window.innerWidth + "px";
+      confetti.style.backgroundColor =
+        colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDuration = 3 + Math.random() * 3 + "s";
+      container.appendChild(confetti);
+
+      setTimeout(() => {
+        confetti.remove();
+      }, 6000);
+    };
+
+    const interval = setInterval(createConfetti, 200);
+
+    return () => {
+      clearInterval(interval);
+      container.remove();
+    };
+  }, []);
+
+  return null;
+}
+
 function App() {
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -122,6 +156,10 @@ function App() {
 
   return (
     <BrowserRouter>
+
+      {/* 🎉 CONFETTI EFFECT ADD */}
+      <ConfettiEffect />
+
       <Navbar
         user={user}
         cartCount={cartCount}
@@ -146,7 +184,6 @@ function App() {
 
       <Routes>
 
-        {/* 🏠 HOME PAGE */}
         <Route
           path="/"
           element={
@@ -160,7 +197,6 @@ function App() {
           }
         />
 
-        {/* 🔥 HOT DEALS PAGE */}
         <Route
           path="/hot-deals"
           element={
@@ -174,7 +210,6 @@ function App() {
           }
         />
 
-        {/* 🎨 DESIGN LAB PAGE */}
         <Route
           path="/design-lab"
           element={
@@ -188,7 +223,6 @@ function App() {
           }
         />
 
-        {/* CATEGORY PRODUCTS PAGE */}
         <Route
           path="/category/:slug"
           element={
@@ -202,7 +236,6 @@ function App() {
           }
         />
 
-        {/* ✅ PRODUCT DETAIL PAGE */}
         <Route
           path="/product/:id"
           element={
@@ -222,6 +255,7 @@ function App() {
 
       <MobileBottomNav />
       <DBChatbot />
+
     </BrowserRouter>
   );
 }
