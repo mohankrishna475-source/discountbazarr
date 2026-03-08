@@ -14,6 +14,9 @@ import AllCategories from "./pages/AllCategories";
 /* ✅ NEW PRODUCT PAGE IMPORT */
 import ProductPage from "./pages/ProductPage";
 
+/* ✅ AUTO FETCH IMPORT */
+import { autoFetchProducts } from "./services/productAutoFetch";
+
 /* 🔷 MOBILE BOTTOM NAV COMPONENT */
 function MobileBottomNav() {
   const navigate = useNavigate();
@@ -54,6 +57,11 @@ function App() {
   const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState([]);
+
+  /* ✅ AUTO FETCH RUN */
+  useEffect(() => {
+    autoFetchProducts(250); 
+  }, []);
 
   useEffect(() => {
     const savedPhone = localStorage.getItem("db_user_phone");

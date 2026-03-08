@@ -12,9 +12,46 @@ function ProductPage({ addToCart }) {
   const [imageIndex, setImageIndex] = useState(0);
   const [zoomImage, setZoomImage] = useState(null);
 
+  /* NEW STATE (SerpAPI) */
+  const [autoImages, setAutoImages] = useState([]);
+  const [autoDescription, setAutoDescription] = useState("");
+
   useEffect(() => {
     fetchProduct();
   }, [id]);
+
+  /* SERP API FETCH */
+  const fetchSerpData = async (title) => {
+
+    try {
+
+      const apiKey = import.meta.env.VITE_SERP_API_KEY;
+
+      const url =
+        `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent(title)}&api_key=${apiKey}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const item = data.shopping_results?.[0];
+
+      if (item) {
+
+        if (item.thumbnail) {
+          setAutoImages([item.thumbnail]);
+        }
+
+        if (item.snippet) {
+          setAutoDescription(item.snippet);
+        }
+
+      }
+
+    } catch (err) {
+      console.log("SerpAPI error", err);
+    }
+
+  };
 
   const fetchProduct = async () => {
 
@@ -34,6 +71,9 @@ function ProductPage({ addToCart }) {
         .eq("id", id);
 
       loadRelated(data.subcategory_slug);
+
+      /* CALL SERP API */
+      fetchSerpData(data.title);
 
     }
 
@@ -58,7 +98,8 @@ function ProductPage({ addToCart }) {
     product.image_url,
     product.image_2,
     product.image_3,
-    product.image_4
+    product.image_4,
+    ...autoImages
   ].filter(Boolean);
 
   const nextImage = () => {
@@ -188,7 +229,9 @@ https://discountbazarr.com/product/${product.id}`;
 
           <h3>Description</h3>
 
-          <p>{product.description}</p>
+          <p>
+            {product.description || autoDescription}
+          </p>
 
         </div>
 
