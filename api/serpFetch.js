@@ -1,6 +1,6 @@
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
 
-  const { query } = req.query;
+  const query = req.query.query;
 
   const apiKey = process.env.SERP_API_KEY;
 
@@ -19,4 +19,4 @@ export default async function handler(req, res) {
 
   }
 
-}
+};
