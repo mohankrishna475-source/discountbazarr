@@ -1,10 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 export default function SmartCart({ cart = [], setCart }) {
-  const [open, setOpen] = useState(true);
+ const [open, setOpen] = useState(true);
 
-  // ✅ SAFE CART
-  const safeCart = Array.isArray(cart) ? cart : [];
+// CART SAVE
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}, [cart]);
+
+// SAFE CART
+const safeCart = Array.isArray(cart) ? cart : [];
 
   // ✅ TOTAL (memo for performance)
   const total = useMemo(() => {
@@ -16,11 +21,14 @@ export default function SmartCart({ cart = [], setCart }) {
 
   // ❌ REMOVE ITEM
   function removeItem(index) {
-    if (!setCart) return;
-    const newCart = [...safeCart];
-    newCart.splice(index, 1);
-    setCart(newCart);
-  }
+
+  if (!setCart) return;
+
+  const newCart = safeCart.filter((_, i) => i !== index);
+
+  setCart(newCart);
+
+}
 
 // ✅ CUSTOM WHATSAPP MESSAGE (WITH PRODUCT LINK)
 

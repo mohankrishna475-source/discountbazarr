@@ -112,7 +112,7 @@
   font-weight: 600;
 }
 
-.tag-item:nth-child(1) { color: #facc15; }
+.tag-item:nth-child(1) { color: #dc2626; }
 .tag-item:nth-child(2) { color: #3b82f6; }
 .tag-item:nth-child(3) { color: #10b981; }
 
@@ -673,7 +673,7 @@ margin:auto;
 }
 
 .tag-yellow {
-  color: #facc15;
+  color: #dc2626;
 }
 
 .tag-green {
@@ -700,7 +700,7 @@ margin:auto;
 }
 
 .brand-blue { color: #2563eb; animation-delay: 0s; }
-.brand-yellow { color: #facc15; animation-delay: 3s; }
+.brand-yellow { color: #dc2626; animation-delay: 3s; }
 .brand-green { color: #16a34a; animation-delay: 6s; }
 
 @keyframes brandSwitch {

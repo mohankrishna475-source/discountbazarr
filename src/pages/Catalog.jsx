@@ -1,425 +1,458 @@
 import { useEffect, useState } from "react";
+import { FaHeart } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabase";
 import "../styles/catalog.css";
 import SmartCart from "../components/SmartCart";
 
-
 export default function Catalog({
-  addToCart,
-  searchTerm,
-  cart,
-  setCart,
-  mode = "home"
+addToCart,
+searchTerm,
+cart,
+setCart,
+mode = "home"
 }) {
 
-  const navigate = useNavigate();
-  const { slug } = useParams();
+const navigate = useNavigate();
+const { slug } = useParams();
 
-  const [categories, setCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(1);
+const [categories, setCategories] = useState([]);
+const [activeCategory, setActiveCategory] = useState(null);
+const [products, setProducts] = useState([]);
+const [currentSlide, setCurrentSlide] = useState(1);
+const [wishlist, setWishlist] = useState([]);
 
-  const increaseViewCount = async (product) => {
+const increaseViewCount = async (product) => {
 
-    const { data } = await supabase
-      .from("catalog_items")
-      .select("views_count")
-      .eq("id", product.id)
-      .single();
+const { data } = await supabase
+  .from("catalog_items")
+  .select("views_count")
+  .eq("id", product.id)
+  .single();
 
-    const currentViews = data?.views_count || 0;
+const currentViews = data?.views_count || 0;
+
+await supabase
+  .from("catalog_items")
+  .update({ views_count: currentViews + 1 })
+  .eq("id", product.id);
+
+
+};
+
+/* NEW FUNCTION FOR CART COUNT */
+
+const updateCartCount = async (product) => {
+
+
+const { data } = await supabase
+  .from("catalog_items")
+  .select("cart_count")
+  .eq("id", product.id)
+  .single();
+
+const current = data?.cart_count || 0;
+
+await supabase
+  .from("catalog_items")
+  .update({ cart_count: current + 1 })
+  .eq("id", product.id);
+
+
+};
+
+/* WISHLIST */
+
+const toggleWishlist = async (product) => {
+
+  const exists = wishlist.includes(product.id);
+
+  if (exists) {
+
+    await supabase
+      .from("wishlist")
+      .delete()
+      .eq("product_id", product.id);
 
     await supabase
       .from("catalog_items")
-      .update({ views_count: currentViews + 1 })
+      .update({
+        wishlist_count: Math.max((product.wishlist_count || 1) - 1, 0)
+      })
       .eq("id", product.id);
-  };
 
-  /* SLIDER */
+    setWishlist(wishlist.filter(id => id !== product.id));
 
-  useEffect(() => {
+  } else {
 
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === 6 ? 1 : prev + 1));
-    }, 30000);
+    await supabase
+      .from("wishlist")
+      .insert([{ product_id: product.id }]);
 
-    return () => clearInterval(interval);
+    await supabase
+      .from("catalog_items")
+      .update({
+        wishlist_count: (product.wishlist_count || 0) + 1
+      })
+      .eq("id", product.id);
 
-  }, []);
+    setWishlist([...wishlist, product.id]);
 
-  /* LOAD CATEGORIES */
+  }
 
-  useEffect(() => {
+};
 
-    const loadCategories = async () => {
+/* SLIDER */
 
-      const { data } = await supabase
-        .from("subcategories")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+useEffect(() => {
 
-      setCategories(data || []);
+const interval = setInterval(() => {
+  setCurrentSlide((prev) => (prev === 12 ? 1 : prev + 1));
+}, 4000);
 
-    };
+return () => clearInterval(interval);
 
-    loadCategories();
 
-  }, []);
+}, []);
 
-  /* ACTIVE CATEGORY */
+/* LOAD CATEGORIES */
 
-  useEffect(() => {
+useEffect(() => {
 
-    if (slug) {
-      setActiveCategory(slug);
-    } else {
-      setActiveCategory(null);
-    }
+const loadCategories = async () => {
 
-  }, [slug]);
+  const { data } = await supabase
+    .from("subcategories")
+    .select("*")
+    .eq("is_active", true)
+    .order("display_order", { ascending: true });
 
-  /* CATEGORY PRODUCTS */
+  setCategories(data || []);
 
-  useEffect(() => {
+};
 
-    if (!activeCategory) return;
+loadCategories();
 
-    const loadProducts = async () => {
 
-      const { data } = await supabase
-        .from("catalog_items")
-        .select("*")
-        .eq("subcategory_slug", activeCategory);
+}, []);
 
-      setProducts(data || []);
+/* LOAD WISHLIST */
 
-    };
+useEffect(() => {
 
-    loadProducts();
+const loadWishlist = async () => {
 
-  }, [activeCategory]);
+  const { data } = await supabase
+    .from("wishlist")
+    .select("product_id");
 
-  /* HOT DEALS */
+  if (data) {
+    setWishlist(data.map(i => i.product_id));
+  }
 
-  useEffect(() => {
+};
 
-    if (mode !== "hot") return;
+loadWishlist();
 
-    const loadHotDeals = async () => {
 
-      const { data } = await supabase
-        .from("catalog_items")
-        .select("*")
-        .limit(200);
+}, []);
 
-      setProducts(data || []);
+/* ACTIVE CATEGORY */
 
-    };
+useEffect(() => {
 
-    loadHotDeals();
+if (slug) {
+  setActiveCategory(slug);
+} else {
+  setActiveCategory(null);
+}
 
-  }, [mode]);
 
-  const filteredProducts = products.filter((item) => {
-    if (!searchTerm) return true;
-    return item.title?.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+}, [slug]);
 
-  const orderOnWhatsApp = (product) => {
+/* CATEGORY PRODUCTS */
 
-    const message =
-      `Hi Discount Bazarr,%0A I want to order:%0A${product.title}%0APrice: ₹${product.db_price}`;
+useEffect(() => {
 
-    window.open(`https://wa.me/918328364086?text=${message}`, "_blank");
 
-  };
+if (!activeCategory) return;
 
-  const calculateSave = (p) => {
-    if (!p.online_price || !p.db_price) return 0;
-    return p.online_price - p.db_price;
-  };
+const loadProducts = async () => {
 
-  return (
-  <div className="catalog-page">
+  const { data } = await supabase
+    .from("catalog_items")
+    .select("*")
+    .eq("subcategory_slug", activeCategory);
 
- 
-      {/* HERO */}
+  setProducts(data || []);
 
-      <div className="hero">
+};
 
-        <h1 className="brand-title">Discount Bazarr</h1>
+loadProducts();
 
-        <div className="scrolling-brand">
-          <div className="brand-slide brand-blue">Discount Bazarr</div>
-          <div className="brand-slide brand-yellow">Discount Bazarr</div>
-          <div className="brand-slide brand-green">Discount Bazarr</div>
-        </div>
 
-        <div className="mobile-tagline">
+}, [activeCategory]);
 
-          <div className="tag-line-row">
-            <span className="tag-blue">• Come with Trust</span>
-            <span className="tag-yellow">• Buy with Confidence</span>
+/* HOT DEALS */
+
+useEffect(() => {
+
+if (mode !== "hot") return;
+
+const loadHotDeals = async () => {
+
+  const { data } = await supabase
+    .from("catalog_items")
+    .select("*")
+    .limit(200);
+
+  setProducts(data || []);
+
+};
+
+loadHotDeals();
+
+
+}, [mode]);
+
+const filteredProducts = products.filter((item) => {
+if (!searchTerm) return true;
+return item.title?.toLowerCase().includes(searchTerm.toLowerCase());
+});
+
+const orderOnWhatsApp = (product) => {
+
+  const message =
+    `Hi Discount Bazarr,%0A I want to order:%0A${product.title}%0APrice: ₹${product.db_price}`;
+
+  window.open(`https://wa.me/918328364086?text=${message}`, "_blank");
+
+};
+
+const calculateSave = (p) => {
+if (!p.online_price || !p.db_price) return 0;
+return p.online_price - p.db_price;
+};
+
+return ( <div className="catalog-page">
+
+
+  {/* HERO */}
+
+  <div className="hero">
+
+    <h1 className="brand-title">Discount Bazarr</h1>
+
+    <div className="scrolling-brand">
+      <div className="brand-slide brand-blue">Discount Bazarr</div>
+      <div className="brand-slide brand-yellow">Discount Bazarr</div>
+      <div className="brand-slide brand-green">Discount Bazarr</div>
+    </div>
+
+    <div className="mobile-tagline">
+
+      <div className="tag-line-row">
+        <span className="tag-blue">• Come with Trust</span>
+        <span className="tag-yellow">• Buy with Confidence</span>
+      </div>
+
+      <div className="tag-line-row">
+        <span className="tag-green">• Move with Happiness</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* BACK BUTTON */}
+
+  {activeCategory && (
+    <div className="back-button" onClick={() => navigate(-1)}>
+      ⬅ Back
+    </div>
+  )}
+
+  {/* BREADCRUMB */}
+
+  {activeCategory && (
+
+    <div className="breadcrumb">
+
+      <span
+        className="crumb-link"
+        onClick={() => navigate("/")}
+      >
+        Home
+      </span>
+
+      <span className="crumb-sep">›</span>
+
+      <span className="crumb-current">
+        {activeCategory.replace("-", " ")}
+      </span>
+
+    </div>
+
+  )}
+
+  {/* HOME PAGE */}
+
+  {mode === "home" && !activeCategory && (
+
+    <>
+
+      <div className="mobile-category-header">
+
+        <h2>Shop by Categories</h2>
+
+        <span
+          style={{ color: "red", cursor: "pointer", fontWeight: "600" }}
+          onClick={() => navigate("/all-categories")}
+        >
+          See All →
+        </span>
+
+      </div>
+
+      <div className="category-grid">
+
+        {categories.slice(0, 6).map((cat) => (
+
+          <div
+            key={cat.id}
+            className="category-card"
+            onClick={() => navigate(`/category/${cat.slug}`)}
+          >
+
+            <div className="cat-icon">
+
+              {cat.name === "Kitchen Appliances" && "🍲"}
+              {cat.name === "Premium Footwear" && "👞"}
+              {cat.name === "Household" && "🪑"}
+              {cat.name === "Fashion Wear" && "👗"}
+              {cat.name === "Small Appliances" && "🔋"}
+              {cat.name === "Luggage & Bags" && "🧳"}
+
+            </div>
+
+            <div className="category-name">{cat.name}</div>
+
           </div>
 
-          <div className="tag-line-row">
-            <span className="tag-green">• Move with Happiness</span>
-          </div>
+        ))}
+
+      </div>
+
+      {/* SLIDER */}
+
+      <div style={{ marginTop: "20px" }}>
+
+        <div className="mobile-slider">
+
+          <img
+            src={`/slides/slide${currentSlide}.jpg`}
+            alt={`slide-${currentSlide}`}
+            className="single-slide"
+          />
 
         </div>
 
       </div>
-   {/* BACK BUTTON */}
-{activeCategory && (
-  <div className="back-button" onClick={() => navigate(-1)}>
-    ⬅ Back
-  </div>
-)}
 
-{/* BREADCRUMB */}
+    </>
 
-{activeCategory && (
+  )}
 
-  <div className="breadcrumb">
+  {/* CATEGORY PRODUCTS */}
 
-    <span
-      className="crumb-link"
-      onClick={() => navigate("/")}
-    >
-      Home
-    </span>
+  {activeCategory && (
 
-    <span className="crumb-sep">›</span>
+    <div className="product-grid">
 
-    <span className="crumb-current">
-      {activeCategory.replace("-", " ")}
-    </span>
+      {filteredProducts.map((p) => {
 
-  </div>
+        const save = calculateSave(p);
 
-)}
-      {/* HOME PAGE */}
+        return (
 
-      {mode === "home" && !activeCategory && (
+          <div className="product-card" key={p.id}>
 
-        <>
-
-          {/* HEADER */}
-
-          <div className="mobile-category-header">
-
-            <h2>Shop by Categories</h2>
-
-            <span
-              style={{ color: "red", cursor: "pointer", fontWeight: "600" }}
-              onClick={() => navigate("/all-categories")}
-            >
-              See All →
-            </span>
-
-          </div>
-
-          {/* CATEGORY GRID */}
-
-          <div className="category-grid">
-
-            {categories.slice(0, 6).map((cat) => (
+            <div style={{ position: "relative" }}>
 
               <div
-                key={cat.id}
-                className="category-card"
-                onClick={() => navigate(`/category/${cat.slug}`)}
+                className="wishlist-icon"
+                onClick={() => toggleWishlist(p)}
+                style={{
+                  position: "absolute",
+                  top: "8px",
+                  right: "8px",
+                  cursor: "pointer",
+                  color: wishlist.includes(p.id) ? "red" : "#bbb"
+                }}
               >
-
-              <div className="cat-icon">
-
-{cat.name === "Kitchen Appliances" && "🍲"}
-{cat.name === "Premium Footwear" && "👞"}
-{cat.name === "Household" && "🪑"}
-{cat.name === "Fashion Wear" && "👗"}
-{cat.name === "Small Appliances" && "🔋"}
-{cat.name === "Luggage & Bags" && "🧳"}
-
-</div>
-
-                <div className="category-name">{cat.name}</div>
-
+                <FaHeart />
               </div>
 
-            ))}
-
-          </div>
-
-          {/* SLIDER */}
-
-          <div style={{ marginTop: "20px" }}>
-
-            <div className="mobile-slider">
+              {p.discount_percent > 0 && (
+                <div className="discount-tag">
+                  {p.discount_percent}% OFF
+                </div>
+              )}
 
               <img
-                src={`/slides/slide${currentSlide}.jpg`}
-                alt={`slide-${currentSlide}`}
-                className="single-slide"
+                src={p.image_url || "/no-image.png"}
+                alt={p.title}
+                onClick={() => {
+                  increaseViewCount(p);
+                  navigate(`/product/${p.id}`);
+                }}
               />
 
             </div>
 
-          </div>
+            <h3>{p.title}</h3>
 
-        </>
+            <div style={{ textDecoration: "line-through", color: "#999" }}>
+              ₹{p.online_price}
+            </div>
 
-      )}
+            <div style={{ color: "#16a34a", fontWeight: "bold" }}>
+              ₹{p.db_price}
+            </div>
 
-      {/* HOT DEALS */}
+            <div style={{ fontSize: "12px", color: "#2563eb" }}>
+              You Save ₹{save}
+            </div>
 
-      {mode === "hot" && (
+            <div style={{ fontSize: "11px", color: "#777" }}>
+              👁 {p.views_count || 0} views
+            </div>
 
-        <>
-<div className="mobile-back-btn">
-  <button onClick={() => navigate("/")}>
-    ← Back
-  </button>
-</div>
-          <h2 style={{ textAlign: "center" }}>🔥 Hot Deals</h2>
+            <button onClick={() => {
+              addToCart(p);
+              updateCartCount(p);
+            }}>
+              Add to Cart
+            </button>
 
-          <div className="product-grid">
-
-            {products.map((p) => {
-
-              const save = calculateSave(p);
-
-              return (
-
-               <div className="product-card" key={p.id}>
-
-<div style={{position:"relative"}}>
-
-{p.is_hot_deal && (
-<div className="deal-tag hot">🔥 HOT</div>
-)}
-
-{p.views_count >= 5 && (
-<div className="deal-tag trending">🔥 TRENDING</div>
-)}
-
-{p.discount_percent >= 60 && (
-<div className="deal-tag best">💰 BEST</div>
-)}
-
-{(p.views_count + p.discount_percent) >= 70 && (
-<div className="deal-tag smart">🧠 SMART</div>
-)}
-
-<img
- src={p.image_url || "/no-image.png"}
- alt={p.title}
- onClick={() => navigate(`/product/${p.id}`)}
-/>
-
-</div>
-
-                  <h3>{p.title}</h3>
-
-                  <div style={{ textDecoration: "line-through", color: "#999" }}>
-                    ₹{p.online_price}
-                  </div>
-
-                  <div style={{ color: "#16a34a", fontWeight: "bold" }}>
-                    ₹{p.db_price}
-                  </div>
-
-                  <div style={{ fontSize: "12px", color: "#2563eb" }}>
-                    You Save ₹{save}
-                  </div>
-
-                  <button onClick={() => addToCart(p)}>
-                    Add to Cart
-                  </button>
-
-                  <button onClick={() => orderOnWhatsApp(p)}>
-                    Order on WhatsApp
-                  </button>
-
-                </div>
-
-              );
-
-            })}
+            <button onClick={() => orderOnWhatsApp(p)}>
+              Order on WhatsApp
+            </button>
 
           </div>
-        </>
-      )}
 
-      {/* CATEGORY PRODUCTS */}
+        );
 
-      {activeCategory && (
-
-        <div className="product-grid">
-
-          {filteredProducts.map((p) => {
-
-            const save = calculateSave(p);
-
-            return (
-
-              <div className="product-card" key={p.id}>
-
-                <div style={{position:"relative"}}>
-
-{p.discount_percent > 0 && (
-<div className="discount-tag">
-{p.discount_percent}% OFF
-</div>
-)}
-
-<img
- src={p.image_url || "/no-image.png"}
- alt={p.title}
- onClick={() => {
-   increaseViewCount(p);
-   navigate(`/product/${p.id}`);
- }}
-/>
-
-</div>
-                <h3>{p.title}</h3>
-
-                <div style={{ textDecoration: "line-through", color: "#999" }}>
-                  ₹{p.online_price}
-                </div>
-
-                <div style={{ color: "#16a34a", fontWeight: "bold" }}>
-                  ₹{p.db_price}
-                </div>
-
-                <div style={{ fontSize: "12px", color: "#2563eb" }}>
-                  You Save ₹{save}
-                </div>
-
-                <button onClick={() => addToCart(p)}>
-                  Add to Cart
-                </button>
-
-                <button onClick={() => orderOnWhatsApp(p)}>
-                  Order on WhatsApp
-                </button>
-
-              </div>
-
-            );
-
-          })}
-
-        </div>
-
-      )}
-
-      <SmartCart cart={cart} setCart={setCart} />
+      })}
 
     </div>
-  );
+
+  )}
+
+  <SmartCart cart={cart} setCart={setCart} />
+
+</div>
+
+);
 
 }
