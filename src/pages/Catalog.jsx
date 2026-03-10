@@ -82,6 +82,13 @@ const toggleWishlist = async (product) => {
       .eq("id", product.id);
 
     setWishlist(wishlist.filter(id => id !== product.id));
+setProducts(products.map(p =>
+p.id === product.id
+? { ...p, wishlist_count: exists
+? Math.max((p.wishlist_count || 1) - 1, 0)
+: (p.wishlist_count || 0) + 1 }
+: p
+));
 
   } else {
 
@@ -197,24 +204,52 @@ loadProducts();
 
 useEffect(() => {
 
-if (mode !== "hot") return;
+  if (mode !== "hot") return;
 
-const loadHotDeals = async () => {
+  const loadHotDeals = async () => {
 
-  const { data } = await supabase
-    .from("catalog_items")
-    .select("*")
-    .limit(200);
+    const { data } = await supabase
+      .from("catalog_items")
+      .select("*");
 
-  setProducts(data || []);
+    if (!data) {
+      setProducts([]);
+      return;
+    }
 
-};
+    const deals = data.map((p) => {
 
-loadHotDeals();
+      let dealType = "";
 
+      if (p.views_count >= 5) {
+        dealType = "TRENDING";
+      }
+
+      if (p.discount_percent >= 60) {
+        dealType = "BEST";
+      }
+
+      if ((p.views_count + p.discount_percent) >= 70) {
+        dealType = "SMART";
+      }
+
+      if (p.is_hot_deal === true) {
+        dealType = "HOT";
+      }
+
+      return { ...p, dealType };
+
+    });
+
+    const filtered = deals.filter(p => p.dealType !== "");
+
+    setProducts(filtered);
+
+  };
+
+  loadHotDeals();
 
 }, [mode]);
-
 const filteredProducts = products.filter((item) => {
 if (!searchTerm) return true;
 return item.title?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -363,6 +398,88 @@ return ( <div className="catalog-page">
 
   )}
 
+{/* HOT DEALS PAGE */}
+
+{mode === "hot" && (
+
+  <div className="product-grid">
+
+    {filteredProducts.map((p) => {
+
+      const save = calculateSave(p);
+
+      return (
+
+        <div className="product-card" key={p.id}>
+
+          <div style={{ position: "relative" }}>
+
+            {p.dealType === "HOT" && (
+              <div className="deal-tag hot">🔥 HOT DEAL</div>
+            )}
+
+            {p.dealType === "TRENDING" && (
+              <div className="deal-tag trending">📈 TRENDING</div>
+            )}
+
+            {p.dealType === "BEST" && (
+              <div className="deal-tag best">💰 BEST DEAL</div>
+            )}
+
+            {p.dealType === "SMART" && (
+              <div className="deal-tag smart">🧠 SMART DEAL</div>
+            )}
+
+            <img
+              src={p.image_url || "/no-image.png"}
+              alt={p.title}
+              onClick={() => {
+                increaseViewCount(p);
+                navigate(`/product/${p.id}`);
+              }}
+            />
+
+          </div>
+
+          <h3>{p.title}</h3>
+
+          <div style={{ textDecoration: "line-through", color: "#999" }}>
+            ₹{p.online_price}
+          </div>
+
+          <div style={{ color: "#16a34a", fontWeight: "bold" }}>
+            ₹{p.db_price}
+          </div>
+
+          <div style={{ fontSize: "12px", color: "#2563eb" }}>
+            You Save ₹{save}
+          </div>
+
+          <div style={{ fontSize: "11px", color: "#777" }}>
+            👁 {p.views_count || 0} views
+          </div>
+
+          <button onClick={() => {
+            addToCart(p);
+            updateCartCount(p);
+          }}>
+            Add to Cart
+          </button>
+
+          <button onClick={() => orderOnWhatsApp(p)}>
+            Order on WhatsApp
+          </button>
+
+        </div>
+
+      );
+
+    })}
+
+  </div>
+
+)}
+
   {/* CATEGORY PRODUCTS */}
 
   {activeCategory && (
@@ -378,6 +495,21 @@ return ( <div className="catalog-page">
           <div className="product-card" key={p.id}>
 
             <div style={{ position: "relative" }}>
+{p.dealType === "HOT" && (
+<div className="deal-tag hot">🔥 HOT DEAL</div>
+)}
+
+{p.dealType === "TRENDING" && (
+<div className="deal-tag trending">📈 TRENDING</div>
+)}
+
+{p.dealType === "BEST" && (
+<div className="deal-tag best">💰 BEST DEAL</div>
+)}
+
+{p.dealType === "SMART" && (
+<div className="deal-tag smart">🧠 SMART DEAL</div>
+)}
 
               <div
                 className="wishlist-icon"
@@ -423,6 +555,9 @@ return ( <div className="catalog-page">
             <div style={{ fontSize: "12px", color: "#2563eb" }}>
               You Save ₹{save}
             </div>
+<div style={{ fontSize: "11px", color: "#e11d48" }}>
+❤️ {p.wishlist_count || 0}
+</div>
 
             <div style={{ fontSize: "11px", color: "#777" }}>
               👁 {p.views_count || 0} views

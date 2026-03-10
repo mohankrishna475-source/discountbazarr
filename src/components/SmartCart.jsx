@@ -22,11 +22,31 @@ const safeCart = Array.isArray(cart) ? cart : [];
   // ❌ REMOVE ITEM
   function removeItem(index) {
 
-  if (!setCart) return;
+async function removeItem(index) {
 
-  const newCart = safeCart.filter((_, i) => i !== index);
+const removed = safeCart[index];
 
-  setCart(newCart);
+const newCart = [...safeCart];
+newCart.splice(index, 1);
+
+setCart(newCart);
+
+if (removed?.id) {
+
+const { data } = await supabase
+.from("catalog_items")
+.select("cart_count")
+.eq("id", removed.id)
+.single();
+
+const current = data?.cart_count || 1;
+
+await supabase
+.from("catalog_items")
+.update({ cart_count: Math.max(current - 1, 0) })
+.eq("id", removed.id);
+
+}
 
 }
 
@@ -146,3 +166,5 @@ const message =
     </div>
   );
 }
+}
+
